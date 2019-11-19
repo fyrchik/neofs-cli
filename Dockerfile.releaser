@@ -1,0 +1,14 @@
+# Executable image
+FROM alpine:3.10
+
+WORKDIR /
+
+RUN set -x \
+  && apk add --no-cache bash \
+  && echo "#!/bin/bash" >> ~/.bashrc \
+  && echo "neofs-cli --help" >> ~/.bashrc \
+  && chmod +rx ~/.bashrc
+
+COPY neofs-cli /bin/neofs-cli
+
+CMD ["bash"]
