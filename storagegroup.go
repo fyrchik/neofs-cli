@@ -7,6 +7,7 @@ import (
 	"math"
 	"time"
 
+	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/refs"
 	"github.com/nspcc-dev/neofs-proto/session"
@@ -91,7 +92,7 @@ func putSG(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 

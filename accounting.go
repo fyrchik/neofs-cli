@@ -9,6 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-proto/accounting"
 	"github.com/nspcc-dev/neofs-proto/decimal"
 	"github.com/nspcc-dev/neofs-proto/refs"
@@ -48,7 +49,7 @@ func getBalance(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 

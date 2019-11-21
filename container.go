@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bytefmt"
+	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-proto/container"
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/refs"
@@ -87,7 +88,7 @@ func putContainer(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -253,7 +254,7 @@ func listContainers(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 

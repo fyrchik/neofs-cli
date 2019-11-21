@@ -1,10 +1,7 @@
 package main
 
 import (
-	"crypto/ecdsa"
-	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 
@@ -67,7 +64,7 @@ func setCommand(mode setMode) cli.ActionFunc {
 
 		switch mode {
 		case KeyMode:
-			if _, err := parseKeyValue(value); err != nil {
+			if _, err := crypto.LoadPrivateKey(value); err != nil {
 				fmt.Println(err.Error())
 				os.Exit(2)
 			}
@@ -106,16 +103,4 @@ func parseHostValue(val string) (string, error) {
 	}
 
 	return net.JoinHostPort(addr.IP.String(), port), nil
-}
-
-func parseKeyValue(val string) (*ecdsa.PrivateKey, error) {
-	if data, err := ioutil.ReadFile(val); err == nil {
-		return crypto.UnmarshalPrivateKey(data)
-	} else if data, err = hex.DecodeString(val); err == nil {
-		return crypto.UnmarshalPrivateKey(data)
-	} else if key, err := crypto.WIFDecode(val); err == nil {
-		return key, nil
-	}
-
-	return nil, errors.Errorf("unknown key format (%q), expect: hex-string, wif or file-path", val)
 }

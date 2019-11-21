@@ -78,7 +78,7 @@ func putWithdraw(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -141,7 +141,7 @@ func getWithdraw(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -243,7 +243,7 @@ func delWithdraw(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -296,7 +296,7 @@ func listWithdraw(c *cli.Context) error {
 	}
 
 	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
+	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
