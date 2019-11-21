@@ -5,8 +5,8 @@ go 1.13
 require (
 	code.cloudfoundry.org/bytefmt v0.0.0-20190819182555-854d396b647c
 	github.com/mr-tron/base58 v1.1.2
-	github.com/nspcc-dev/neofs-crypto v0.2.1
-	github.com/nspcc-dev/neofs-proto v0.1.0
+	github.com/nspcc-dev/neofs-crypto v0.2.2
+	github.com/nspcc-dev/neofs-proto v0.2.1
 	github.com/nspcc-dev/netmap v1.6.1
 	github.com/nspcc-dev/netmap-ql v1.2.0
 	github.com/pkg/errors v0.8.1
