@@ -116,8 +116,9 @@ func putContainer(c *cli.Context) error {
 		Capacity:  cCap * uint64(object.UnitsGB),
 		OwnerID:   owner,
 		Rules:     *plRule,
-		TTL:       getTTL(c),
 	}
+
+	req.SetTTL(getTTL(c))
 
 	if err = service.SignRequest(req, key); err != nil {
 		return errors.Wrap(err, "could not sign request")
@@ -149,10 +150,9 @@ loop:
 		case <-ticker.C:
 			fmt.Printf("...")
 
-			resp, err := client.List(ctx, &container.ListRequest{
-				OwnerID: owner,
-				TTL:     getTTL(c),
-			})
+			req := &container.ListRequest{OwnerID: owner}
+			req.SetTTL(getTTL(c))
+			resp, err := client.List(ctx, req)
 			if err != nil {
 				continue loop
 			}
@@ -191,7 +191,10 @@ func getContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	resp, err := container.NewServiceClient(conn).Get(ctx, &container.GetRequest{CID: cid, TTL: getTTL(c)})
+	req := &container.GetRequest{CID: cid}
+	req.SetTTL(getTTL(c))
+
+	resp, err := container.NewServiceClient(conn).Get(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform request")
 	}
@@ -226,7 +229,9 @@ func delContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	_, err = container.NewServiceClient(conn).Delete(ctx, &container.DeleteRequest{CID: cid, TTL: getTTL(c)})
+	req := &container.DeleteRequest{CID: cid}
+	req.SetTTL(getTTL(c))
+	_, err = container.NewServiceClient(conn).Delete(ctx, req)
 
 	return errors.Wrap(err, "can't perform request")
 }
@@ -264,10 +269,9 @@ func listContainers(c *cli.Context) error {
 		return errors.Wrap(err, "could not compute owner ID")
 	}
 
-	resp, err := container.NewServiceClient(conn).List(ctx, &container.ListRequest{
-		OwnerID: owner,
-		TTL:     getTTL(c),
-	})
+	req := &container.ListRequest{OwnerID: owner}
+	req.SetTTL(getTTL(c))
+	resp, err := container.NewServiceClient(conn).List(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "can't complete request")
 	}

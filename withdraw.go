@@ -106,8 +106,8 @@ func putWithdraw(c *cli.Context) error {
 		Amount:    dec,
 		Height:    blockHeight,
 		MessageID: msgID,
-		TTL:       getTTL(c),
 	}
+	req.SetTTL(getTTL(c))
 
 	if err = service.SignRequest(req, key); err != nil {
 		return errors.Wrap(err, "could not sign request")
@@ -157,11 +157,12 @@ func getWithdraw(c *cli.Context) error {
 		return errors.Wrap(err, "could not compute owner ID")
 	}
 
-	resp, err := accounting.NewWithdrawClient(conn).Get(ctx, &accounting.GetRequest{
+	req := &accounting.GetRequest{
 		ID:      accounting.ChequeID(wid),
 		OwnerID: owner,
-		TTL:     getTTL(c),
-	})
+	}
+	req.SetTTL(getTTL(c))
+	resp, err := accounting.NewWithdrawClient(conn).Get(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform request")
 	}
@@ -266,8 +267,8 @@ func delWithdraw(c *cli.Context) error {
 		ID:        accounting.ChequeID(wid),
 		OwnerID:   owner,
 		MessageID: msgID,
-		TTL:       getTTL(c),
 	}
+	req.SetTTL(getTTL(c))
 
 	if err = service.SignRequest(req, key); err != nil {
 		return errors.Wrap(err, "could not sign request")
@@ -311,10 +312,9 @@ func listWithdraw(c *cli.Context) error {
 		return errors.Wrap(err, "could not compute owner ID")
 	}
 
-	resp, err := accounting.NewWithdrawClient(conn).List(ctx, &accounting.ListRequest{
-		OwnerID: owner,
-		TTL:     getTTL(c),
-	})
+	req := &accounting.ListRequest{OwnerID: owner}
+	req.SetTTL(getTTL(c))
+	resp, err := accounting.NewWithdrawClient(conn).List(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "can't complete request")
 	}

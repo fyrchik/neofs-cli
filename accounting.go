@@ -64,10 +64,10 @@ func getBalance(c *cli.Context) error {
 		return err
 	}
 
-	resp, err := accounting.NewAccountingClient(conn).Balance(ctx, &accounting.BalanceRequest{
-		OwnerID: owner,
-		TTL:     getTTL(c),
-	})
+	req := &accounting.BalanceRequest{OwnerID: owner}
+	req.SetTTL(getTTL(c))
+
+	resp, err := accounting.NewAccountingClient(conn).Balance(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "could not request balance")
 	}

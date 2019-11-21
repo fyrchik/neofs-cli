@@ -181,15 +181,16 @@ func del(c *cli.Context) error {
 		return errors.Wrap(err, "could not compute owner ID")
 	}
 
-	_, err = object.NewServiceClient(conn).Delete(ctx, &object.DeleteRequest{
+	req := &object.DeleteRequest{
 		Address: refs.Address{
 			CID:      cid,
 			ObjectID: objID,
 		},
 		OwnerID: owner,
-		TTL:     getTTL(c),
 		Token:   token,
-	})
+	}
+	req.SetTTL(getTTL(c))
+	_, err = object.NewServiceClient(conn).Delete(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform DELETE request")
 	}
@@ -232,14 +233,15 @@ func head(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	resp, err := object.NewServiceClient(conn).Head(ctx, &object.HeadRequest{
+	req := &object.HeadRequest{
 		Address: refs.Address{
 			CID:      cid,
 			ObjectID: objID,
 		},
 		FullHeaders: fh,
-		TTL:         getTTL(c),
-	})
+	}
+	req.SetTTL(getTTL(c))
+	resp, err := object.NewServiceClient(conn).Head(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform HEAD request")
 	}
@@ -322,12 +324,13 @@ func search(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	resp, err := object.NewServiceClient(conn).Search(ctx, &object.SearchRequest{
-		ContainerID: cid,
-		Query:       data,
-		TTL:         getTTL(c),
-		Version:     1,
-	})
+	sreq := &object.SearchRequest{
+		ContainerID:  cid,
+		Query:        data,
+		QueryVersion: 1,
+	}
+	sreq.SetTTL(getTTL(c))
+	resp, err := object.NewServiceClient(conn).Search(ctx, sreq)
 	if err != nil {
 		return errors.Wrap(err, "can't perform SEARCH request")
 	}
@@ -381,14 +384,15 @@ func getRange(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	resp, err := object.NewServiceClient(conn).GetRange(ctx, &object.GetRangeRequest{
+	req := &object.GetRangeRequest{
 		Address: refs.Address{
 			ObjectID: objID,
 			CID:      cid,
 		},
 		Ranges: ranges,
-		TTL:    getTTL(c),
-	})
+	}
+	req.SetTTL(getTTL(c))
+	resp, err := object.NewServiceClient(conn).GetRange(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform GETRANGE request")
 	}
@@ -449,15 +453,16 @@ func getRangeHash(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	resp, err := object.NewServiceClient(conn).GetRangeHash(ctx, &object.GetRangeHashRequest{
+	req := &object.GetRangeHashRequest{
 		Address: refs.Address{
 			ObjectID: objID,
 			CID:      cid,
 		},
 		Ranges: ranges,
 		Salt:   salt,
-		TTL:    getTTL(c),
-	})
+	}
+	req.SetTTL(getTTL(c))
+	resp, err := object.NewServiceClient(conn).GetRangeHash(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform GETRANGEHASH request")
 	}
@@ -642,14 +647,15 @@ func put(c *cli.Context) error {
 		fmt.Printf("  ID: %s\n  CID: %s\n", resp.Address.ObjectID, resp.Address.CID)
 		if verify {
 			result := "success"
-			r, err := client.GetRangeHash(ctx, &object.GetRangeHashRequest{
+			req := &object.GetRangeHashRequest{
 				Address: refs.Address{
 					ObjectID: resp.Address.ObjectID,
 					CID:      resp.Address.CID,
 				},
 				Ranges: []object.Range{{Offset: 0, Length: obj.SystemHeader.PayloadLength}},
-				TTL:    getTTL(c),
-			})
+			}
+			req.SetTTL(getTTL(c))
+			r, err := client.GetRangeHash(ctx, req)
 			if err != nil {
 				result = "can't perform GETRANGEHASH request"
 			} else if len(r.Hashes) == 0 {
@@ -773,13 +779,14 @@ func get(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	getClient, err := object.NewServiceClient(conn).Get(ctx, &object.GetRequest{
+	req := &object.GetRequest{
 		Address: refs.Address{
 			ObjectID: oid,
 			CID:      cid,
 		},
-		TTL: getTTL(c),
-	})
+	}
+	req.SetTTL(getTTL(c))
+	getClient, err := object.NewServiceClient(conn).Get(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "get command failed on client creation")
 	}
