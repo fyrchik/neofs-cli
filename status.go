@@ -41,6 +41,7 @@ func getMetrics(c *cli.Context) error {
 	var (
 		err  error
 		conn *grpc.ClientConn
+		req  = new(state.MetricsRequest)
 		host = c.Parent().String(hostFlag)
 	)
 
@@ -58,8 +59,10 @@ func getMetrics(c *cli.Context) error {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
-	client := state.NewStatusClient(conn)
-	res, err := client.Metrics(ctx, new(state.MetricsRequest))
+	setTTL(c, req)
+	signRequest(c, req)
+
+	res, err := state.NewStatusClient(conn).Metrics(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "status command failed on remote call")
 	}
@@ -85,6 +88,7 @@ func getHealthy(c *cli.Context) error {
 	var (
 		err  error
 		conn *grpc.ClientConn
+		req  = new(state.HealthRequest)
 		host = c.Parent().String(hostFlag)
 	)
 
@@ -102,8 +106,10 @@ func getHealthy(c *cli.Context) error {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
-	client := state.NewStatusClient(conn)
-	res, err := client.HealthCheck(ctx, new(state.HealthRequest))
+	setTTL(c, req)
+	signRequest(c, req)
+
+	res, err := state.NewStatusClient(conn).HealthCheck(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "status command failed on remote call")
 	}
@@ -117,6 +123,7 @@ func getEpoch(c *cli.Context) error {
 	var (
 		err  error
 		conn *grpc.ClientConn
+		req  = new(state.NetmapRequest)
 		host = c.Parent().String(hostFlag)
 	)
 
@@ -134,8 +141,10 @@ func getEpoch(c *cli.Context) error {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
-	client := state.NewStatusClient(conn)
-	nm, err := client.Netmap(ctx, new(state.NetmapRequest))
+	setTTL(c, req)
+	signRequest(c, req)
+
+	nm, err := state.NewStatusClient(conn).Netmap(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "status command failed on remote call")
 	}
@@ -148,6 +157,7 @@ func getNetmap(c *cli.Context) error {
 	var (
 		err  error
 		conn *grpc.ClientConn
+		req  = new(state.NetmapRequest)
 		host = c.Parent().String(hostFlag)
 	)
 
@@ -165,8 +175,10 @@ func getNetmap(c *cli.Context) error {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
-	client := state.NewStatusClient(conn)
-	nm, err := client.Netmap(ctx, new(state.NetmapRequest))
+	setTTL(c, req)
+	signRequest(c, req)
+
+	nm, err := state.NewStatusClient(conn).Netmap(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "status command failed on remote call")
 	}
