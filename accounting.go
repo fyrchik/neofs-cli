@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"io"
 	"os"
 	"text/tabwriter"
 	"time"
 
-	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-proto/accounting"
 	"github.com/nspcc-dev/neofs-proto/decimal"
 	"github.com/nspcc-dev/neofs-proto/refs"
@@ -26,16 +24,13 @@ var (
 	}
 	getBalanceAction = &action{
 		Action: getBalance,
-		Flags: []cli.Flag{
-			keyFile,
-		},
 	}
 )
 
 func getBalance(c *cli.Context) error {
 	var (
 		err  error
-		key  *ecdsa.PrivateKey
+		key  = getKey(c)
 		conn *grpc.ClientConn
 
 		host   = c.Parent().String(hostFlag)
@@ -45,11 +40,6 @@ func getBalance(c *cli.Context) error {
 	if host == "" || keyArg == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -66,7 +56,8 @@ func getBalance(c *cli.Context) error {
 	}
 
 	req := &accounting.BalanceRequest{OwnerID: owner}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
 
 	resp, err := accounting.NewAccountingClient(conn).Balance(ctx, req)
 	if err != nil {

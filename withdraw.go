@@ -15,7 +15,6 @@ import (
 	"github.com/nspcc-dev/neofs-proto/accounting"
 	"github.com/nspcc-dev/neofs-proto/decimal"
 	"github.com/nspcc-dev/neofs-proto/refs"
-	"github.com/nspcc-dev/neofs-proto/service"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -30,7 +29,6 @@ var (
 	putWithdrawAction = &action{
 		Action: putWithdraw,
 		Flags: []cli.Flag{
-			keyFile,
 			blockHeight,
 			amount,
 		},
@@ -38,47 +36,36 @@ var (
 	getWithdrawAction = &action{
 		Action: getWithdraw,
 		Flags: []cli.Flag{
-			keyFile,
 			withdrawID,
 		},
 	}
 	delWithdrawAction = &action{
 		Action: delWithdraw,
 		Flags: []cli.Flag{
-			keyFile,
 			withdrawID,
 		},
 	}
 
 	listWithdrawAction = &action{
 		Action: listWithdraw,
-		Flags: []cli.Flag{
-			keyFile,
-		},
 	}
 )
 
 func putWithdraw(c *cli.Context) error {
 	var (
 		err   error
-		key   *ecdsa.PrivateKey
+		key   = getKey(c)
 		conn  *grpc.ClientConn
 		msgID refs.MessageID
 
 		host        = c.Parent().String(hostFlag)
-		keyArg      = c.String(keyFlag)
 		amount      = c.Float64(amountFlag)
 		blockHeight = c.Uint64(heightFlag)
 	)
 
-	if host == "" || keyArg == "" {
+	if host == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -107,11 +94,8 @@ func putWithdraw(c *cli.Context) error {
 		Height:    blockHeight,
 		MessageID: msgID,
 	}
-	req.SetTTL(getTTL(c))
-
-	if err = service.SignRequest(req, key); err != nil {
-		return errors.Wrap(err, "could not sign request")
-	}
+	setTTL(c, req)
+	signRequest(c, req)
 
 	resp, err := accounting.NewWithdrawClient(conn).Put(ctx, req)
 	if err != nil {
@@ -161,7 +145,8 @@ func getWithdraw(c *cli.Context) error {
 		ID:      accounting.ChequeID(wid),
 		OwnerID: owner,
 	}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
 	resp, err := accounting.NewWithdrawClient(conn).Get(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform request")
@@ -268,11 +253,8 @@ func delWithdraw(c *cli.Context) error {
 		OwnerID:   owner,
 		MessageID: msgID,
 	}
-	req.SetTTL(getTTL(c))
-
-	if err = service.SignRequest(req, key); err != nil {
-		return errors.Wrap(err, "could not sign request")
-	}
+	setTTL(c, req)
+	signRequest(c, req)
 
 	_, err = accounting.NewWithdrawClient(conn).Delete(ctx, req)
 
@@ -313,7 +295,9 @@ func listWithdraw(c *cli.Context) error {
 	}
 
 	req := &accounting.ListRequest{OwnerID: owner}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
+
 	resp, err := accounting.NewWithdrawClient(conn).List(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "can't complete request")
