@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"math"
 	"time"
 
-	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/refs"
 	"github.com/nspcc-dev/neofs-proto/session"
@@ -41,7 +39,6 @@ var (
 	putSGAction = &action{
 		Action: putSG,
 		Flags: []cli.Flag{
-			keyFile,
 			containerID,
 			objectIDs,
 		},
@@ -74,25 +71,19 @@ func delSG(c *cli.Context) error {
 func putSG(c *cli.Context) error {
 	var (
 		err  error
-		key  *ecdsa.PrivateKey
+		key  = getKey(c)
 		conn *grpc.ClientConn
 		cid  refs.CID
 		oids []refs.ObjectID
 
 		host           = c.Parent().String(hostFlag)
-		keyArg         = c.String(keyFlag)
 		strContainerID = c.String(cidFlag)
 		strObjectIDs   = c.StringSlice(objFlag)
 	)
 
-	if host == "" || keyArg == "" {
+	if host == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -151,10 +142,15 @@ func putSG(c *cli.Context) error {
 
 	sg.SystemHeader.ID = objID
 
-	token, err := establishSession(ctx, conn, key, &session.Token{
-		ObjectID:   []refs.ObjectID{objID},
-		FirstEpoch: 0,
-		LastEpoch:  math.MaxUint64,
+	token, err := establishSession(ctx, sessionParams{
+		cmd:  c,
+		key:  key,
+		conn: conn,
+		token: &session.Token{
+			// FirstEpoch: 0,
+			ObjectID:  []refs.ObjectID{objID},
+			LastEpoch: math.MaxUint64,
+		},
 	})
 	if err != nil {
 		return errors.Wrap(err, "can't establish session")
@@ -166,7 +162,11 @@ func putSG(c *cli.Context) error {
 		return errors.Wrap(err, "put command failed on client creation")
 	}
 
-	if err = putClient.Send(object.MakePutRequestHeader(sg, 0, getTTL(c), token)); err != nil {
+	req := object.MakePutRequestHeader(sg, token)
+	setTTL(c, req)
+	signRequest(c, req)
+
+	if err = putClient.Send(req); err != nil {
 		return errors.Wrap(err, "storage group put command failed on Send SG origin")
 	}
 
