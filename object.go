@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bytefmt"
-	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-proto/hash"
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/query"
@@ -29,6 +28,13 @@ type (
 	grpcState interface {
 		GRPCStatus() *status.Status
 	}
+
+	sessionParams struct {
+		cmd   *cli.Context
+		token *session.Token
+		conn  *grpc.ClientConn
+		key   *ecdsa.PrivateKey
+	}
 )
 
 const (
@@ -39,7 +45,6 @@ const (
 	userHeaderFlag  = "user"
 
 	dataChunkSize = 3 * object.UnitsMB
-	defaultTTL    = 2
 )
 
 var (
@@ -51,7 +56,6 @@ var (
 	putObjectAction = &action{
 		Action: put,
 		Flags: []cli.Flag{
-			keyFile,
 			containerID,
 			filesPath,
 			permissions,
@@ -79,7 +83,6 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			objectID,
-			keyFile,
 		},
 	}
 	headObjectAction = &action{
@@ -130,25 +133,19 @@ var (
 func del(c *cli.Context) error {
 	var (
 		err   error
-		conn  *grpc.ClientConn
+		key   = getKey(c)
 		cid   refs.CID
 		objID refs.ObjectID
-		key   *ecdsa.PrivateKey
+		conn  *grpc.ClientConn
 
 		host   = c.Parent().String(hostFlag)
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
-		keyArg = c.String(keyFlag)
 	)
 
-	if host == "" || keyArg == "" {
+	if host == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -168,10 +165,15 @@ func del(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	token, err := establishSession(ctx, conn, key, &session.Token{
-		ObjectID:   []refs.ObjectID{objID},
-		FirstEpoch: 0,
-		LastEpoch:  math.MaxUint64,
+	token, err := establishSession(ctx, sessionParams{
+		cmd:  c,
+		key:  key,
+		conn: conn,
+		token: &session.Token{
+			// FirstEpoch: 0,
+			ObjectID:  []refs.ObjectID{objID},
+			LastEpoch: math.MaxUint64,
+		},
 	})
 	if err != nil {
 		return errors.Wrap(err, "can't establish session")
@@ -190,7 +192,9 @@ func del(c *cli.Context) error {
 		OwnerID: owner,
 		Token:   token,
 	}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
+
 	_, err = object.NewServiceClient(conn).Delete(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform DELETE request")
@@ -241,7 +245,9 @@ func head(c *cli.Context) error {
 		},
 		FullHeaders: fh,
 	}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
+
 	resp, err := object.NewServiceClient(conn).Head(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform HEAD request")
@@ -269,7 +275,7 @@ func search(c *cli.Context) error {
 		err  error
 		conn *grpc.ClientConn
 		cid  refs.CID
-		req  query.Query
+		q    query.Query
 
 		host   = c.Parent().String(hostFlag)
 		cidArg = c.String(cidFlag)
@@ -293,26 +299,26 @@ func search(c *cli.Context) error {
 	}
 
 	for i := 0; i < len(qArgs); i += 2 {
-		req.Filters = append(req.Filters, query.Filter{
+		q.Filters = append(q.Filters, query.Filter{
 			Type:  query.Filter_Regex,
 			Name:  qArgs[i],
 			Value: qArgs[i+1],
 		})
 	}
 	if isRoot {
-		req.Filters = append(req.Filters, query.Filter{
+		q.Filters = append(q.Filters, query.Filter{
 			Type: query.Filter_Exact,
 			Name: object.KeyRootObject,
 		})
 	}
 	if sg {
-		req.Filters = append(req.Filters, query.Filter{
+		q.Filters = append(q.Filters, query.Filter{
 			Type: query.Filter_Exact,
 			Name: object.KeyStorageGroup,
 		})
 	}
 
-	data, err := req.Marshal()
+	data, err := q.Marshal()
 	if err != nil {
 		return errors.Wrap(err, "can't marshal query")
 	}
@@ -325,13 +331,15 @@ func search(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	sreq := &object.SearchRequest{
+	req := &object.SearchRequest{
 		ContainerID:  cid,
 		Query:        data,
 		QueryVersion: 1,
 	}
-	sreq.SetTTL(getTTL(c))
-	resp, err := object.NewServiceClient(conn).Search(ctx, sreq)
+	setTTL(c, req)
+	signRequest(c, req)
+
+	resp, err := object.NewServiceClient(conn).Search(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform SEARCH request")
 	}
@@ -392,7 +400,9 @@ func getRange(c *cli.Context) error {
 		},
 		Ranges: ranges,
 	}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
+
 	resp, err := object.NewServiceClient(conn).GetRange(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform GETRANGE request")
@@ -462,7 +472,9 @@ func getRangeHash(c *cli.Context) error {
 		Ranges: ranges,
 		Salt:   salt,
 	}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
+
 	resp, err := object.NewServiceClient(conn).GetRangeHash(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform GETRANGEHASH request")
@@ -521,13 +533,12 @@ func parseRanges(rng []string) (ranges []object.Range, err error) {
 func put(c *cli.Context) error {
 	var (
 		err   error
-		key   *ecdsa.PrivateKey
 		cid   refs.CID
+		key   = getKey(c)
 		conn  *grpc.ClientConn
 		fd    *os.File
 		fSize int64
 
-		keyArg = c.String(keyFlag)
 		sCID   = c.String(cidFlag)
 		host   = c.Parent().String(hostFlag)
 		fPaths = c.StringSlice(fileFlag)
@@ -536,14 +547,9 @@ func put(c *cli.Context) error {
 		userH  = c.StringSlice(userHeaderFlag)
 	)
 
-	if host == "" || keyArg == "" || sCID == "" || len(fPaths) == 0 {
+	if host == "" || sCID == "" || len(fPaths) == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
 		return err
 	}
 
@@ -582,10 +588,15 @@ func put(c *cli.Context) error {
 			return errors.Wrap(err, "can't generate new object ID")
 		}
 
-		token, err := establishSession(ctx, conn, key, &session.Token{
-			ObjectID:   []refs.ObjectID{objID},
-			FirstEpoch: 0,
-			LastEpoch:  math.MaxUint64,
+		token, err := establishSession(ctx, sessionParams{
+			cmd:  c,
+			key:  key,
+			conn: conn,
+			token: &session.Token{
+				ObjectID:   []refs.ObjectID{objID},
+				FirstEpoch: 0,
+				LastEpoch:  math.MaxUint64,
+			},
 		})
 		if st, ok := err.(grpcState); ok {
 			state := st.GRPCStatus()
@@ -617,7 +628,11 @@ func put(c *cli.Context) error {
 
 		fmt.Printf("[%s] Sending header...\n", fPath)
 
-		if err = putClient.Send(object.MakePutRequestHeader(obj, 0, getTTL(c), token)); err != nil {
+		req := object.MakePutRequestHeader(obj, token)
+		setTTL(c, req)
+		signRequest(c, req)
+
+		if err = putClient.Send(req); err != nil {
 			return errors.Wrap(err, "put command failed on Send object origin")
 		}
 
@@ -633,7 +648,11 @@ func put(c *cli.Context) error {
 					h, _ = hash.Concat([]hash.Hash{h, hash.Sum(data[:n])})
 				}
 
-				if err := putClient.Send(object.MakePutRequestChunk(data[:n])); err != nil && err != io.EOF {
+				req := object.MakePutRequestChunk(data[:n])
+				setTTL(c, req)
+				signRequest(c, req)
+
+				if err := putClient.Send(req); err != nil && err != io.EOF {
 					return errors.Wrap(err, "put command failed on Send")
 				}
 			}
@@ -655,9 +674,11 @@ func put(c *cli.Context) error {
 				},
 				Ranges: []object.Range{{Offset: 0, Length: obj.SystemHeader.PayloadLength}},
 			}
-			req.SetTTL(getTTL(c))
-			r, err := client.GetRangeHash(ctx, req)
-			if err != nil {
+
+			setTTL(c, req)
+			signRequest(c, req)
+
+			if r, err := client.GetRangeHash(ctx, req); err != nil {
 				result = "can't perform GETRANGEHASH request"
 			} else if len(r.Hashes) == 0 {
 				result = "empty hash list received"
@@ -684,25 +705,29 @@ func parseUserHeaders(userH []string) (headers []object.Header) {
 	return
 }
 
-func establishSession(ctx context.Context, conn *grpc.ClientConn, key *ecdsa.PrivateKey, t *session.Token) (*session.Token, error) {
-	client, err := session.NewSessionClient(conn).Create(ctx)
+func establishSession(ctx context.Context, p sessionParams) (*session.Token, error) {
+	client, err := session.NewSessionClient(p.conn).Create(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	owner, err := refs.NewOwnerID(&key.PublicKey)
+	owner, err := refs.NewOwnerID(&p.key.PublicKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compute owner ID")
 	}
 
 	token := &session.Token{
 		OwnerID:    owner,
-		ObjectID:   t.ObjectID,
-		FirstEpoch: t.FirstEpoch,
-		LastEpoch:  t.LastEpoch,
+		ObjectID:   p.token.ObjectID,
+		FirstEpoch: p.token.FirstEpoch,
+		LastEpoch:  p.token.LastEpoch,
 	}
 
-	if err := client.Send(session.NewInitRequest(token)); err != nil {
+	req := session.NewInitRequest(token)
+	setTTL(p.cmd, req)
+	signRequest(p.cmd, req)
+
+	if err := client.Send(req); err != nil {
 		return nil, err
 	}
 
@@ -732,9 +757,14 @@ func establishSession(ctx context.Context, conn *grpc.ClientConn, key *ecdsa.Pri
 		return nil, errors.New("received token differ")
 	} else if unsigned.Header.PublicKey == nil {
 		return nil, errors.New("received nil public key")
-	} else if err = unsigned.Sign(key); err != nil {
+	} else if err = unsigned.Sign(p.key); err != nil {
 		return nil, errors.Wrap(err, "can't sign token")
-	} else if err := client.Send(session.NewSignedRequest(unsigned)); err != nil {
+	}
+
+	req = session.NewSignedRequest(unsigned)
+	setTTL(p.cmd, req)
+	signRequest(p.cmd, req)
+	if err = client.Send(req); err != nil {
 		return nil, err
 	} else if resp, err = client.Recv(); err != nil {
 		return nil, err
@@ -747,10 +777,10 @@ func establishSession(ctx context.Context, conn *grpc.ClientConn, key *ecdsa.Pri
 func get(c *cli.Context) error {
 	var (
 		err  error
-		oid  refs.ObjectID
-		cid  refs.CID
-		conn *grpc.ClientConn
 		fd   *os.File
+		cid  refs.CID
+		oid  refs.ObjectID
+		conn *grpc.ClientConn
 
 		host  = c.Parent().String(hostFlag)
 		sCID  = c.String(cidFlag)
@@ -786,7 +816,9 @@ func get(c *cli.Context) error {
 			CID:      cid,
 		},
 	}
-	req.SetTTL(getTTL(c))
+	setTTL(c, req)
+	signRequest(c, req)
+
 	getClient, err := object.NewServiceClient(conn).Get(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "get command failed on client creation")
