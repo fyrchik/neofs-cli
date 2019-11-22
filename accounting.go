@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"io"
 	"os"
@@ -25,16 +24,13 @@ var (
 	}
 	getBalanceAction = &action{
 		Action: getBalance,
-		Flags: []cli.Flag{
-			keyFile,
-		},
 	}
 )
 
 func getBalance(c *cli.Context) error {
 	var (
 		err  error
-		key  *ecdsa.PrivateKey
+		key  = getKey(c)
 		conn *grpc.ClientConn
 
 		host   = c.Parent().String(hostFlag)
@@ -44,11 +40,6 @@ func getBalance(c *cli.Context) error {
 	if host == "" || keyArg == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
 		return err
 	}
 
@@ -64,10 +55,11 @@ func getBalance(c *cli.Context) error {
 		return err
 	}
 
-	resp, err := accounting.NewAccountingClient(conn).Balance(ctx, &accounting.BalanceRequest{
-		OwnerID: owner,
-		TTL:     getTTL(c),
-	})
+	req := &accounting.BalanceRequest{OwnerID: owner}
+	setTTL(c, req)
+	signRequest(c, req)
+
+	resp, err := accounting.NewAccountingClient(conn).Balance(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "could not request balance")
 	}

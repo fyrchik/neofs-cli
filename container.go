@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"time"
 
@@ -34,7 +33,6 @@ var (
 	putContainerAction = &action{
 		Action: putContainer,
 		Flags: []cli.Flag{
-			keyFile,
 			cli.StringFlag{
 				Name:  ruleFlag,
 				Usage: "container rules",
@@ -60,34 +58,25 @@ var (
 	}
 	listContainersAction = &action{
 		Action: listContainers,
-		Flags: []cli.Flag{
-			keyFile,
-		},
 	}
 )
 
 func putContainer(c *cli.Context) error {
 	var (
 		err    error
-		key    *ecdsa.PrivateKey
+		key    = getKey(c)
+		msgID  refs.MessageID
 		conn   *grpc.ClientConn
 		plRule *netmap.PlacementRule
-		msgID  refs.MessageID
 
-		host   = c.Parent().String(hostFlag)
-		keyArg = c.String(keyFlag)
-		cCap   = c.Uint64(capFlag)
-		sRule  = c.String(ruleFlag)
+		host  = c.Parent().String(hostFlag)
+		cCap  = c.Uint64(capFlag)
+		sRule = c.String(ruleFlag)
 	)
 
-	if host == "" || keyArg == "" || sRule == "" {
+	if host == "" || sRule == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
 		return err
 	}
 
@@ -116,12 +105,14 @@ func putContainer(c *cli.Context) error {
 		Capacity:  cCap * uint64(object.UnitsGB),
 		OwnerID:   owner,
 		Rules:     *plRule,
-		TTL:       getTTL(c),
 	}
 
 	if err = service.SignRequest(req, key); err != nil {
 		return errors.Wrap(err, "could not sign request")
 	}
+
+	setTTL(c, req)
+	signRequest(c, req)
 
 	resp, err := container.NewServiceClient(conn).Put(ctx, req)
 	if err != nil {
@@ -149,10 +140,11 @@ loop:
 		case <-ticker.C:
 			fmt.Printf("...")
 
-			resp, err := client.List(ctx, &container.ListRequest{
-				OwnerID: owner,
-				TTL:     getTTL(c),
-			})
+			req := &container.ListRequest{OwnerID: owner}
+			setTTL(c, req)
+			signRequest(c, req)
+
+			resp, err := client.List(ctx, req)
 			if err != nil {
 				continue loop
 			}
@@ -176,8 +168,8 @@ func getContainer(c *cli.Context) error {
 		cid  refs.CID
 		conn *grpc.ClientConn
 
-		host = c.Parent().String(hostFlag)
 		sCID = c.String(cidFlag)
+		host = c.Parent().String(hostFlag)
 	)
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {
@@ -191,7 +183,11 @@ func getContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	resp, err := container.NewServiceClient(conn).Get(ctx, &container.GetRequest{CID: cid, TTL: getTTL(c)})
+	req := &container.GetRequest{CID: cid}
+	setTTL(c, req)
+	signRequest(c, req)
+
+	resp, err := container.NewServiceClient(conn).Get(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "can't perform request")
 	}
@@ -211,8 +207,8 @@ func delContainer(c *cli.Context) error {
 		cid  refs.CID
 		conn *grpc.ClientConn
 
-		host = c.Parent().String(hostFlag)
 		sCID = c.String(cidFlag)
+		host = c.Parent().String(hostFlag)
 	)
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {
@@ -226,7 +222,11 @@ func delContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	_, err = container.NewServiceClient(conn).Delete(ctx, &container.DeleteRequest{CID: cid, TTL: getTTL(c)})
+	req := &container.DeleteRequest{CID: cid}
+	setTTL(c, req)
+	signRequest(c, req)
+
+	_, err = container.NewServiceClient(conn).Delete(ctx, req)
 
 	return errors.Wrap(err, "can't perform request")
 }
@@ -234,21 +234,14 @@ func delContainer(c *cli.Context) error {
 func listContainers(c *cli.Context) error {
 	var (
 		err  error
-		key  *ecdsa.PrivateKey
+		key  = getKey(c)
 		conn *grpc.ClientConn
-
-		host   = c.Parent().String(hostFlag)
-		keyArg = c.String(keyFlag)
+		host = c.Parent().String(hostFlag)
 	)
 
-	if host == "" || keyArg == "" {
+	if host == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = parseKeyValue(keyArg); err != nil {
 		return err
 	}
 
@@ -264,10 +257,11 @@ func listContainers(c *cli.Context) error {
 		return errors.Wrap(err, "could not compute owner ID")
 	}
 
-	resp, err := container.NewServiceClient(conn).List(ctx, &container.ListRequest{
-		OwnerID: owner,
-		TTL:     getTTL(c),
-	})
+	req := &container.ListRequest{OwnerID: owner}
+	setTTL(c, req)
+	signRequest(c, req)
+
+	resp, err := container.NewServiceClient(conn).List(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "can't complete request")
 	}
