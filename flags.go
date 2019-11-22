@@ -1,6 +1,12 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"fmt"
+	"os"
+
+	crypto "github.com/nspcc-dev/neofs-crypto"
+	"github.com/nspcc-dev/neofs-proto/service"
 	"github.com/urfave/cli"
 )
 
@@ -26,13 +32,14 @@ const (
 var (
 	keyFile = cli.StringFlag{
 		Name:   keyFlag,
-		Usage:  "path to user key",
 		EnvVar: KeyEnvValue,
+		Usage:  "user private key in hex, wif formats or path to file",
 	}
 
 	ttlF = cli.UintFlag{
 		Name:  ttlFlag,
 		Usage: "request ttl",
+		Value: service.SingleForwardingTTL,
 	}
 
 	cfgF = cli.StringFlag{
@@ -110,9 +117,34 @@ var (
 	}
 )
 
-func getTTL(c *cli.Context) uint32 {
-	if ttl := c.GlobalUint(ttlFlag); ttl > 0 {
-		return uint32(ttl)
+func signRequest(c *cli.Context, req service.VerifiableRequest) {
+	key := getKey(c)
+	if err := service.SignRequestHeader(key, req); err != nil {
+		fmt.Printf("%T could not sign request\n", req)
+		fmt.Println(err.Error())
+		os.Exit(2)
 	}
-	return defaultTTL
+}
+
+func getKey(c *cli.Context) *ecdsa.PrivateKey {
+	var (
+		err error
+		key *ecdsa.PrivateKey
+	)
+
+	if arg := c.GlobalString(keyFlag); arg == "" {
+		fmt.Println("private key cannot be empty (--key)")
+		fmt.Println("provide hex-string, wif or path")
+		os.Exit(2)
+	} else if key, err = crypto.LoadPrivateKey(arg); err != nil {
+		fmt.Printf("could not load private key: %s\n", arg)
+		fmt.Println(err.Error())
+		os.Exit(2)
+	}
+	return key
+}
+
+func setTTL(c *cli.Context, req service.MetaHeader) {
+	ttl := c.GlobalUint(ttlFlag)
+	req.SetTTL(uint32(ttl))
 }

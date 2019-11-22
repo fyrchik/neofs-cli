@@ -54,7 +54,7 @@ type action struct {
 
 var actions = map[actionName]*action{
 	Global: {
-		Flags: []cli.Flag{ttlF, cfgF},
+		Flags: []cli.Flag{ttlF, cfgF, keyFile},
 	},
 
 	// container commands
