@@ -13,6 +13,6 @@ require (
 	github.com/prometheus/common v0.7.0
 	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.4.0
-	github.com/urfave/cli v1.22.1
+	github.com/urfave/cli/v2 v2.0.0
 	google.golang.org/grpc v1.24.0
 )
