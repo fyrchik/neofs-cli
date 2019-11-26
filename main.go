@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/urfave/cli"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -17,7 +20,25 @@ func main() {
 	cmd.Before = beforeAction
 
 	if err := cmd.Run(os.Args); err != nil {
-		if _, ok := err.(cli.ExitCoder); !ok {
+		if st, ok := status.FromError(errors.Cause(err)); ok {
+			switch st.Code() {
+			case codes.NotFound:
+				fmt.Println("Error: ", st.Message())
+			case codes.Unavailable:
+				fmt.Printf("Network error: %s\n", st.Message())
+			default:
+				fmt.Printf("%s: %s\n", st.Code(), st.Message())
+			}
+
+			if details := st.Details(); len(details) > 0 {
+				fmt.Println("Details:")
+				for _, msg := range st.Details() {
+					fmt.Printf("- %s\n", msg)
+				}
+			}
+
+			os.Exit(2)
+		} else if _, ok := err.(cli.ExitCoder); !ok {
 			fmt.Println(err)
 			os.Exit(2)
 		}
