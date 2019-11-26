@@ -26,9 +26,15 @@ const (
 	ConfigEnvValue = "NEOFS_CLI_CONFIG"
 )
 
-func beforeAction(ctx *cli.Context) error {
+func beforeAction(c *cli.Context) error {
+	if args := c.Args(); len(args) == 0 { // ignore help command
+		return nil
+	} else if args[0] == "set" { // ignore set command
+		return nil
+	}
+
 	// do something before command
-	cfg := ctx.GlobalString(ConfigFlag)
+	cfg := c.GlobalString(ConfigFlag)
 
 	viper.SetConfigFile(cfg)
 	viper.SetConfigType("yml")
@@ -39,15 +45,21 @@ func beforeAction(ctx *cli.Context) error {
 		}
 	}
 
-	if value := viper.GetString(KeyCfgValue); value != "" {
-		if err := os.Setenv(KeyEnvValue, value); err != nil {
-			fmt.Printf("could not set ENV %q: %s", KeyEnvValue, err)
-		}
+	items := map[string]string{
+		KeyCfgValue:  keyFlag,
+		HostCfgValue: hostFlag,
 	}
 
-	if value := viper.GetString(HostCfgValue); value != "" {
-		if err := os.Setenv(HostEnvValue, value); err != nil {
-			fmt.Printf("could not set ENV %q: %s", HostEnvValue, err)
+	for key, flag := range items {
+		// ignore exists flags
+		if c.GlobalString(flag) != "" {
+			continue
+		}
+
+		if value := viper.GetString(key); value != "" {
+			if err := c.GlobalSet(flag, value); err != nil {
+				fmt.Printf("could not set value for %q from config: %s\n", flag, err)
+			}
 		}
 	}
 

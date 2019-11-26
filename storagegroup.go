@@ -15,11 +15,7 @@ import (
 )
 
 var (
-	sgAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	sgAction = &action{}
 
 	getSGAction = &action{
 		Action: getSG,
@@ -72,19 +68,17 @@ func putSG(c *cli.Context) error {
 	var (
 		err  error
 		key  = getKey(c)
+		host = getHost(c)
 		conn *grpc.ClientConn
 		cid  refs.CID
 		oids []refs.ObjectID
 
-		host           = c.Parent().String(hostFlag)
 		strContainerID = c.String(cidFlag)
 		strObjectIDs   = c.StringSlice(objFlag)
 	)
 
-	if host == "" {
+	if strContainerID == "" || len(strObjectIDs) == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	// Try to parse container id
@@ -93,10 +87,6 @@ func putSG(c *cli.Context) error {
 		return errors.Wrapf(err, "could not parse container id %s", strContainerID)
 	}
 
-	// Try to parse object ids
-	if len(strObjectIDs) == 0 {
-		return errors.New("objects are not specified")
-	}
 	oids = make([]refs.ObjectID, 0, len(strObjectIDs))
 	for i := range strObjectIDs {
 		var oid refs.ObjectID

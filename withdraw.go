@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -21,11 +20,7 @@ import (
 )
 
 var (
-	withdrawAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	withdrawAction    = &action{}
 	putWithdrawAction = &action{
 		Action: putWithdraw,
 		Flags: []cli.Flag{
@@ -55,18 +50,16 @@ func putWithdraw(c *cli.Context) error {
 	var (
 		err   error
 		key   = getKey(c)
+		host  = getHost(c)
 		conn  *grpc.ClientConn
 		msgID refs.MessageID
 
-		host        = c.Parent().String(hostFlag)
 		amount      = c.Float64(amountFlag)
 		blockHeight = c.Uint64(heightFlag)
 	)
 
-	if host == "" {
+	if amount == 0 || blockHeight == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -110,23 +103,14 @@ func putWithdraw(c *cli.Context) error {
 func getWithdraw(c *cli.Context) error {
 	var (
 		err  error
-		key  *ecdsa.PrivateKey
+		key  = getKey(c)
+		host = getHost(c)
 		conn *grpc.ClientConn
-
-		keyArg = c.String(keyFlag)
-		host   = c.Parent().String(hostFlag)
-		wid    = c.String(widFlag)
+		wid  = c.String(widFlag)
 	)
 
-	if host == "" || keyArg == "" {
+	if wid == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
-		return err
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -212,24 +196,15 @@ func displayWithdrawal(wr io.Writer, data []byte) error {
 func delWithdraw(c *cli.Context) error {
 	var (
 		err   error
-		key   *ecdsa.PrivateKey
+		key   = getKey(c)
+		host  = getHost(c)
 		conn  *grpc.ClientConn
 		msgID refs.MessageID
-
-		keyArg = c.String(keyFlag)
-		host   = c.Parent().String(hostFlag)
-		wid    = c.String(widFlag)
+		wid   = c.String(widFlag)
 	)
 
-	if host == "" || keyArg == "" {
+	if wid == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
-		return err
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -264,23 +239,10 @@ func delWithdraw(c *cli.Context) error {
 func listWithdraw(c *cli.Context) error {
 	var (
 		err  error
-		key  *ecdsa.PrivateKey
+		key  = getKey(c)
+		host = getHost(c)
 		conn *grpc.ClientConn
-
-		keyArg = c.String(keyFlag)
-		host   = c.Parent().String(hostFlag)
 	)
-
-	if host == "" || keyArg == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	// Try to receive key from file
-	if key, err = crypto.LoadPrivateKey(keyArg); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

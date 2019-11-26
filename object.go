@@ -48,11 +48,7 @@ const (
 )
 
 var (
-	objectAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	objectAction    = &action{}
 	putObjectAction = &action{
 		Action: put,
 		Flags: []cli.Flag{
@@ -134,19 +130,17 @@ func del(c *cli.Context) error {
 	var (
 		err   error
 		key   = getKey(c)
+		host  = getHost(c)
 		cid   refs.CID
 		objID refs.ObjectID
 		conn  *grpc.ClientConn
 
-		host   = c.Parent().String(hostFlag)
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
 	)
 
-	if host == "" {
+	if cidArg == "" || objArg == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
@@ -210,16 +204,14 @@ func head(c *cli.Context) error {
 		cid   refs.CID
 		objID refs.ObjectID
 
-		host   = c.Parent().String(hostFlag)
+		host   = getHost(c)
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
 		fh     = c.Bool(fullHeadersFlag)
 	)
 
-	if host == "" {
+	if cidArg == "" || objArg == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
@@ -277,21 +269,17 @@ func search(c *cli.Context) error {
 		cid  refs.CID
 		q    query.Query
 
-		host   = c.Parent().String(hostFlag)
+		host   = getHost(c)
 		cidArg = c.String(cidFlag)
 		qArgs  = c.Args()
 		isRoot = c.Bool(rootFlag)
 		sg     = c.Bool(sgFlag)
 	)
 
-	if host == "" {
+	if cidArg == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
-
-	if c.NArg()%2 != 0 {
-		return errors.New("number of positional arguments must be event")
+	} else if c.NArg()%2 != 0 {
+		return errors.Errorf("number of positional arguments must be event\nUsage: %s", c.Command.UsageText)
 	}
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
@@ -360,16 +348,14 @@ func getRange(c *cli.Context) error {
 		objID  refs.ObjectID
 		ranges []object.Range
 
-		host   = c.Parent().String(hostFlag)
+		host   = getHost(c)
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
 		rngArg = c.Args()
 	)
 
-	if host == "" {
+	if cidArg == "" || objArg == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
@@ -423,7 +409,7 @@ func getRangeHash(c *cli.Context) error {
 		ranges []object.Range
 		salt   []byte
 
-		host    = c.Parent().String(hostFlag)
+		host    = getHost(c)
 		cidArg  = c.String(cidFlag)
 		objArg  = c.String(objFlag)
 		saltArg = c.String(saltFlag)
@@ -433,10 +419,8 @@ func getRangeHash(c *cli.Context) error {
 		rngArg  = c.Args()
 	)
 
-	if host == "" {
+	if cidArg == "" || objArg == "" || saltArg == "" || len(fPath) == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
@@ -534,23 +518,21 @@ func put(c *cli.Context) error {
 	var (
 		err   error
 		cid   refs.CID
-		key   = getKey(c)
 		conn  *grpc.ClientConn
 		fd    *os.File
 		fSize int64
 
+		key    = getKey(c)
+		host   = getHost(c)
 		sCID   = c.String(cidFlag)
-		host   = c.Parent().String(hostFlag)
 		fPaths = c.StringSlice(fileFlag)
 		perm   = c.Int(permFlag)
 		verify = c.Bool(verifyFlag)
 		userH  = c.StringSlice(userHeaderFlag)
 	)
 
-	if host == "" || sCID == "" || len(fPaths) == 0 {
+	if sCID == "" || len(fPaths) == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {
@@ -782,17 +764,15 @@ func get(c *cli.Context) error {
 		oid  refs.ObjectID
 		conn *grpc.ClientConn
 
-		host  = c.Parent().String(hostFlag)
+		host  = getHost(c)
 		sCID  = c.String(cidFlag)
 		sOID  = c.String(objFlag)
 		fPath = c.String(fileFlag)
 		perm  = c.Int(permFlag)
 	)
 
-	if host == "" || sCID == "" || sOID == "" || fPath == "" {
+	if sCID == "" || sOID == "" || len(fPath) == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {

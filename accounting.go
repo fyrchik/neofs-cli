@@ -17,11 +17,7 @@ import (
 )
 
 var (
-	accountingAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	accountingAction = &action{}
 	getBalanceAction = &action{
 		Action: getBalance,
 	}
@@ -31,17 +27,9 @@ func getBalance(c *cli.Context) error {
 	var (
 		err  error
 		key  = getKey(c)
+		host = getHost(c)
 		conn *grpc.ClientConn
-
-		host   = c.Parent().String(hostFlag)
-		keyArg = c.String(keyFlag)
 	)
-
-	if host == "" || keyArg == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

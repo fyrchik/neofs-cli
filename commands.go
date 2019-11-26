@@ -28,13 +28,13 @@ func commands() cli.Commands {
 		{
 			Name:      "object",
 			Usage:     "object manipulation",
-			UsageText: "object --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "object <subcommand> [arguments...]",
 			Flags:     getFlags(Object),
 			Subcommands: cli.Commands{
 				{
 					Name:  "put",
 					Usage: "put object into container",
-					UsageText: "put --key </path/to/key> --cid <cid> --file </path/to/file> " +
+					UsageText: "put --cid <cid> --file </path/to/file> " +
 						"[--perm <permissions>] [--verify] [--user key1=value1 ...]",
 					Description: "put user data into container",
 					Flags:       getFlags(PutObject),
@@ -51,7 +51,7 @@ func commands() cli.Commands {
 				{
 					Name:        "delete",
 					Usage:       "delete object from container",
-					UsageText:   "delete --cid <cid> --oid <oid> --key </path/to/key>",
+					UsageText:   "delete --cid <cid> --oid <oid>",
 					Description: "delete file from network",
 					Flags:       getFlags(DelObject),
 					Action:      getAction(DelObject),
@@ -91,13 +91,13 @@ func commands() cli.Commands {
 		{
 			Name:      "sg",
 			Usage:     "storage group manipulation",
-			UsageText: "sg --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "sg <subcommand> [arguments...]",
 			Flags:     getFlags(StorageGroup),
 			Subcommands: cli.Commands{
 				{
 					Name:        "put",
 					Usage:       "put storage group in system",
-					UsageText:   "put --key </path/to/key> --cid <cid> --sgid <uuid>...",
+					UsageText:   "put --cid <cid> --sgid <uuid>...",
 					Description: "put new storage group",
 					Flags:       getFlags(PutStorageGroup),
 					Action:      getAction(PutStorageGroup),
@@ -121,7 +121,7 @@ func commands() cli.Commands {
 				{
 					Name:        "delete",
 					Usage:       "delete storage group from the system",
-					UsageText:   "delete --cid <cid> --sgid <sgid> --key </path/to/key>",
+					UsageText:   "delete --cid <cid> --sgid <sgid>",
 					Description: "delete user's storage group",
 					Flags:       getFlags(DeleteStorageGroup),
 					Action:      getAction(DeleteStorageGroup),
@@ -131,13 +131,13 @@ func commands() cli.Commands {
 		{
 			Name:      "container",
 			Usage:     "container manipulation",
-			UsageText: "container --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "container <subcommand> [arguments...]",
 			Flags:     getFlags(Container),
 			Subcommands: cli.Commands{
 				{
 					Name:        "put",
 					Usage:       "put container",
-					UsageText:   "put --key </path/to/key> --rule 'SELECT 3 Node FILTER State NE IR' [--cap <cap-in-GB>]",
+					UsageText:   "put --rule 'SELECT 3 Node FILTER State NE IR' [--cap <cap-in-GB>]",
 					Description: "put container into network",
 					Flags:       getFlags(PutContainer),
 					Action:      getAction(PutContainer),
@@ -161,7 +161,7 @@ func commands() cli.Commands {
 				{
 					Name:        "list",
 					Usage:       "list user containers",
-					UsageText:   "list --key </path/to/key>",
+					UsageText:   "list",
 					Description: "list user containers which are stored in network",
 					Flags:       getFlags(ListContainers),
 					Action:      getAction(ListContainers),
@@ -171,13 +171,13 @@ func commands() cli.Commands {
 		{
 			Name:      "withdraw",
 			Usage:     "withdrawals manipulation",
-			UsageText: "withdraw --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "withdraw <subcommand> [arguments...]",
 			Flags:     getFlags(Withdraw),
 			Subcommands: cli.Commands{
 				{
 					Name:        "put",
 					Usage:       "create request for withdrawal",
-					UsageText:   "put --key </path/to/key> --amount <amount> --height <height>",
+					UsageText:   "put --amount <amount> --height <height>",
 					Description: "put user data into container",
 					Flags:       getFlags(PutWithdraw),
 					Action:      getAction(PutWithdraw),
@@ -185,7 +185,7 @@ func commands() cli.Commands {
 				{
 					Name:        "get",
 					Usage:       "get withdrawal",
-					UsageText:   "get --key </path/to/key> --wid <wid>",
+					UsageText:   "get --wid <wid>",
 					Description: "fetch withdrawal info from network",
 					Flags:       getFlags(GetWithdraw),
 					Action:      getAction(GetWithdraw),
@@ -193,7 +193,7 @@ func commands() cli.Commands {
 				{
 					Name:        "delete",
 					Usage:       "delete withdrawal",
-					UsageText:   "delete --key </path/to/key> --wid <wid>",
+					UsageText:   "delete --wid <wid>",
 					Description: "delete withdrawal from network",
 					Flags:       getFlags(DelWithdraw),
 					Action:      getAction(DelWithdraw),
@@ -201,7 +201,7 @@ func commands() cli.Commands {
 				{
 					Name:        "list",
 					Usage:       "list user withdrawals",
-					UsageText:   "list --key </path/to/key>",
+					UsageText:   "list",
 					Description: "list user withdrawals which are stored in network",
 					Flags:       getFlags(ListWithdraw),
 					Action:      getAction(ListWithdraw),
@@ -211,13 +211,13 @@ func commands() cli.Commands {
 		{
 			Name:      "accounting",
 			Usage:     "accounts manipulation",
-			UsageText: "accounting --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "accounting <subcommand> [arguments...]",
 			Flags:     getFlags(Accounting),
 			Subcommands: cli.Commands{
 				{
 					Name:        "balance",
 					Usage:       "get user account balance",
-					UsageText:   "balance --key </path/to/key>",
+					UsageText:   "balance",
 					Description: "get user balance from network",
 					Flags:       getFlags(BalanceAccounting),
 					Action:      getAction(BalanceAccounting),
@@ -227,7 +227,7 @@ func commands() cli.Commands {
 		{
 			Name:      "status",
 			Usage:     "node status info",
-			UsageText: "status --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "status <subcommand> [arguments...]",
 			Flags:     getFlags(Status),
 			Subcommands: cli.Commands{
 				{

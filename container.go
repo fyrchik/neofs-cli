@@ -25,11 +25,7 @@ const (
 )
 
 var (
-	containerAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	containerAction    = &action{}
 	putContainerAction = &action{
 		Action: putContainer,
 		Flags: []cli.Flag{
@@ -65,19 +61,16 @@ func putContainer(c *cli.Context) error {
 	var (
 		err    error
 		key    = getKey(c)
+		host   = getHost(c)
 		msgID  refs.MessageID
 		conn   *grpc.ClientConn
+		cCap   = c.Uint64(capFlag)
+		sRule  = c.String(ruleFlag)
 		plRule *netmap.PlacementRule
-
-		host  = c.Parent().String(hostFlag)
-		cCap  = c.Uint64(capFlag)
-		sRule = c.String(ruleFlag)
 	)
 
-	if host == "" || sRule == "" {
+	if sRule == "" || cCap == 0 {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
 	}
 
 	if plRule, err = query.ParseQuery(sRule); err != nil {
@@ -166,11 +159,14 @@ func getContainer(c *cli.Context) error {
 	var (
 		err  error
 		cid  refs.CID
+		host = getHost(c)
 		conn *grpc.ClientConn
-
 		sCID = c.String(cidFlag)
-		host = c.Parent().String(hostFlag)
 	)
+
+	if sCID == "" {
+		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
+	}
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
@@ -205,11 +201,14 @@ func delContainer(c *cli.Context) error {
 	var (
 		err  error
 		cid  refs.CID
+		host = getHost(c)
 		conn *grpc.ClientConn
-
 		sCID = c.String(cidFlag)
-		host = c.Parent().String(hostFlag)
 	)
+
+	if sCID == "" {
+		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
+	}
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
@@ -235,15 +234,9 @@ func listContainers(c *cli.Context) error {
 	var (
 		err  error
 		key  = getKey(c)
+		host = getHost(c)
 		conn *grpc.ClientConn
-		host = c.Parent().String(hostFlag)
 	)
-
-	if host == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
