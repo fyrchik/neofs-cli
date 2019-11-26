@@ -21,11 +21,7 @@ import (
 )
 
 var (
-	withdrawAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	withdrawAction    = &action{}
 	putWithdrawAction = &action{
 		Action: putWithdraw,
 		Flags: []cli.Flag{

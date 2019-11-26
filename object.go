@@ -48,11 +48,7 @@ const (
 )
 
 var (
-	objectAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	objectAction    = &action{}
 	putObjectAction = &action{
 		Action: put,
 		Flags: []cli.Flag{

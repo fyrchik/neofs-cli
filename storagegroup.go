@@ -15,11 +15,7 @@ import (
 )
 
 var (
-	sgAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	sgAction = &action{}
 
 	getSGAction = &action{
 		Action: getSG,

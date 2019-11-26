@@ -17,11 +17,7 @@ import (
 )
 
 var (
-	accountingAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	accountingAction = &action{}
 	getBalanceAction = &action{
 		Action: getBalance,
 	}

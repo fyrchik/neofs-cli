@@ -25,11 +25,7 @@ const (
 )
 
 var (
-	containerAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	containerAction    = &action{}
 	putContainerAction = &action{
 		Action: putContainer,
 		Flags: []cli.Flag{

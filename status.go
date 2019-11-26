@@ -14,11 +14,7 @@ import (
 )
 
 var (
-	statusAction = &action{
-		Flags: []cli.Flag{
-			hostAddr,
-		},
-	}
+	statusAction = &action{}
 
 	epochAction = &action{
 		Action: getEpoch,

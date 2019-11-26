@@ -28,7 +28,7 @@ func commands() cli.Commands {
 		{
 			Name:      "object",
 			Usage:     "object manipulation",
-			UsageText: "object --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "object <subcommand> [arguments...]",
 			Flags:     getFlags(Object),
 			Subcommands: cli.Commands{
 				{
@@ -91,7 +91,7 @@ func commands() cli.Commands {
 		{
 			Name:      "sg",
 			Usage:     "storage group manipulation",
-			UsageText: "sg --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "sg <subcommand> [arguments...]",
 			Flags:     getFlags(StorageGroup),
 			Subcommands: cli.Commands{
 				{
@@ -131,7 +131,7 @@ func commands() cli.Commands {
 		{
 			Name:      "container",
 			Usage:     "container manipulation",
-			UsageText: "container --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "container <subcommand> [arguments...]",
 			Flags:     getFlags(Container),
 			Subcommands: cli.Commands{
 				{
@@ -171,7 +171,7 @@ func commands() cli.Commands {
 		{
 			Name:      "withdraw",
 			Usage:     "withdrawals manipulation",
-			UsageText: "withdraw --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "withdraw <subcommand> [arguments...]",
 			Flags:     getFlags(Withdraw),
 			Subcommands: cli.Commands{
 				{
@@ -211,7 +211,7 @@ func commands() cli.Commands {
 		{
 			Name:      "accounting",
 			Usage:     "accounts manipulation",
-			UsageText: "accounting --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "accounting <subcommand> [arguments...]",
 			Flags:     getFlags(Accounting),
 			Subcommands: cli.Commands{
 				{
@@ -227,7 +227,7 @@ func commands() cli.Commands {
 		{
 			Name:      "status",
 			Usage:     "node status info",
-			UsageText: "status --host <ip:port> <subcommand> [arguments...]",
+			UsageText: "status <subcommand> [arguments...]",
 			Flags:     getFlags(Status),
 			Subcommands: cli.Commands{
 				{
