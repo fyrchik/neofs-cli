@@ -126,6 +126,25 @@ func signRequest(c *cli.Context, req service.VerifiableRequest) {
 	}
 }
 
+func getHost(c *cli.Context) string {
+	var (
+		err  error
+		host string
+	)
+
+	if arg := c.GlobalString(hostFlag); arg == "" {
+		fmt.Println("host cannot be empty (--host)")
+		fmt.Println("provide <host>:<port> or <ip>:<port>")
+		os.Exit(2)
+	} else if host, err = parseHostValue(arg); err != nil {
+		fmt.Printf("could not parse host from: %s\n", arg)
+		fmt.Println(err.Error())
+		os.Exit(2)
+	}
+
+	return host
+}
+
 func getKey(c *cli.Context) *ecdsa.PrivateKey {
 	var (
 		err error
