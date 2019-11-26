@@ -36,16 +36,10 @@ var (
 func getMetrics(c *cli.Context) error {
 	var (
 		err  error
+		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.MetricsRequest)
-		host = c.Parent().String(hostFlag)
 	)
-
-	if host == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -83,16 +77,10 @@ func getMetrics(c *cli.Context) error {
 func getHealthy(c *cli.Context) error {
 	var (
 		err  error
+		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.HealthRequest)
-		host = c.Parent().String(hostFlag)
 	)
-
-	if host == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -118,16 +106,10 @@ func getHealthy(c *cli.Context) error {
 func getEpoch(c *cli.Context) error {
 	var (
 		err  error
+		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.NetmapRequest)
-		host = c.Parent().String(hostFlag)
 	)
-
-	if host == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -152,16 +134,10 @@ func getEpoch(c *cli.Context) error {
 func getNetmap(c *cli.Context) error {
 	var (
 		err  error
+		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.NetmapRequest)
-		host = c.Parent().String(hostFlag)
 	)
-
-	if host == "" {
-		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
-	} else if host, err = parseHostValue(host); err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
