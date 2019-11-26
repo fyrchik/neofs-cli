@@ -19,7 +19,7 @@ import (
 	"github.com/nspcc-dev/neofs-proto/refs"
 	"github.com/nspcc-dev/neofs-proto/session"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -55,11 +55,11 @@ var (
 			containerID,
 			filesPath,
 			permissions,
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  verifyFlag,
 				Usage: "verify checksum after put",
 			},
-			cli.StringSliceFlag{
+			&cli.StringSliceFlag{
 				Name:  userHeaderFlag,
 				Usage: "provide optional user headers",
 			},
@@ -94,7 +94,7 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			storageGroup,
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  rootFlag,
 				Usage: "search only user's objects",
 			},
@@ -112,11 +112,11 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			objectID,
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  saltFlag,
 				Usage: "salt to hash with",
 			},
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  verifyFlag,
 				Usage: "verify hash",
 			},
@@ -286,11 +286,11 @@ func search(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
 	}
 
-	for i := 0; i < len(qArgs); i += 2 {
+	for i := 0; i < qArgs.Len(); i += 2 {
 		q.Filters = append(q.Filters, query.Filter{
 			Type:  query.Filter_Regex,
-			Name:  qArgs[i],
-			Value: qArgs[i+1],
+			Name:  qArgs.Get(i),
+			Value: qArgs.Get(i + 1),
 		})
 	}
 	if isRoot {
@@ -489,23 +489,23 @@ func getRangeHash(c *cli.Context) error {
 	return nil
 }
 
-func parseRanges(rng []string) (ranges []object.Range, err error) {
-	ranges = make([]object.Range, len(rng))
-	for i := range rng {
+func parseRanges(rng cli.Args) (ranges []object.Range, err error) {
+	ranges = make([]object.Range, rng.Len())
+	for i := 0; i < rng.Len(); i++ {
 		var (
-			t   uint64
-			rng = strings.Split(rng[i], ":")
+			t     uint64
+			items = strings.Split(rng.Get(i), ":")
 		)
-		if len(rng) != 2 {
+		if len(items) != 2 {
 			return nil, errors.New("range must have form 'offset:length'")
 		}
-		t, err = strconv.ParseUint(rng[0], 10, 32)
+		t, err = strconv.ParseUint(items[0], 10, 32)
 		if err != nil {
 			return nil, errors.Wrap(err, "can't parse offset")
 		}
 		ranges[i].Offset = t
 
-		t, err = strconv.ParseUint(rng[1], 10, 32)
+		t, err = strconv.ParseUint(items[1], 10, 32)
 		if err != nil {
 			return nil, errors.Wrap(err, "can't parse length")
 		}

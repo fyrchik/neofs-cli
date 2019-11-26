@@ -8,7 +8,7 @@ import (
 	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type setMode int
@@ -27,14 +27,14 @@ const (
 )
 
 func beforeAction(c *cli.Context) error {
-	if args := c.Args(); len(args) == 0 { // ignore help command
+	if args := c.Args(); args.Len() == 0 { // ignore help command
 		return nil
-	} else if args[0] == "set" { // ignore set command
+	} else if args.First() == "set" { // ignore set command
 		return nil
 	}
 
 	// do something before command
-	cfg := c.GlobalString(ConfigFlag)
+	cfg := c.String(ConfigFlag)
 
 	viper.SetConfigFile(cfg)
 	viper.SetConfigType("yml")
@@ -52,12 +52,12 @@ func beforeAction(c *cli.Context) error {
 
 	for key, flag := range items {
 		// ignore exists flags
-		if c.GlobalString(flag) != "" {
+		if c.IsSet(flag) {
 			continue
 		}
 
 		if value := viper.GetString(key); value != "" {
-			if err := c.GlobalSet(flag, value); err != nil {
+			if err := c.Set(flag, value); err != nil {
 				fmt.Printf("could not set value for %q from config: %s\n", flag, err)
 			}
 		}

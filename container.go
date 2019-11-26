@@ -13,7 +13,7 @@ import (
 	"github.com/nspcc-dev/netmap"
 	query "github.com/nspcc-dev/netmap-ql"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 )
 
@@ -29,11 +29,12 @@ var (
 	putContainerAction = &action{
 		Action: putContainer,
 		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  ruleFlag,
-				Usage: "container rules",
+			&cli.StringFlag{
+				Required: true,
+				Name:     ruleFlag,
+				Usage:    "container rules",
 			},
-			cli.Uint64Flag{
+			&cli.Uint64Flag{
 				Name:  capFlag,
 				Usage: "container capacity in GB",
 				Value: defaultCapacity,
