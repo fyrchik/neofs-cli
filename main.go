@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

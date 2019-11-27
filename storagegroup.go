@@ -10,7 +10,7 @@ import (
 	"github.com/nspcc-dev/neofs-proto/refs"
 	"github.com/nspcc-dev/neofs-proto/session"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 )
 

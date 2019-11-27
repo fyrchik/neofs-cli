@@ -9,7 +9,7 @@ import (
 	"github.com/nspcc-dev/neofs-proto/state"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/expfmt"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 )
 
