@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"code.cloudfoundry.org/bytefmt"
 	"github.com/nspcc-dev/neofs-proto/container"
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/refs"
-	"github.com/nspcc-dev/neofs-proto/service"
 	"github.com/nspcc-dev/netmap"
 	query "github.com/nspcc-dev/netmap-ql"
 	"github.com/pkg/errors"
@@ -101,10 +99,6 @@ func putContainer(c *cli.Context) error {
 		Rules:     *plRule,
 	}
 
-	if err = service.SignRequest(req, key); err != nil {
-		return errors.Wrap(err, "could not sign request")
-	}
-
 	setTTL(c, req)
 	signRequest(c, req)
 
@@ -191,7 +185,7 @@ func getContainer(c *cli.Context) error {
 
 	fmt.Printf("Container ID: %s\n", cid)
 	fmt.Printf("Owner ID    : %s\n", resp.Container.OwnerID)
-	fmt.Printf("Capacity    : %s\n", bytefmt.ByteSize(resp.Container.Capacity))
+	fmt.Printf("Capacity    : %s\n", object.ByteSize(resp.Container.Capacity))
 	fmt.Printf("Placement   : %s\n", resp.Container.Rules.String())
 	fmt.Printf("Salt        : %s\n", resp.Container.Salt)
 

@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bytefmt"
 	"github.com/nspcc-dev/neofs-proto/hash"
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/query"
@@ -249,7 +248,7 @@ func head(c *cli.Context) error {
 	fmt.Printf("  Object ID   : %s\n", resp.Object.SystemHeader.ID)
 	fmt.Printf("  Owner ID    : %s\n", resp.Object.SystemHeader.OwnerID)
 	fmt.Printf("  Container ID: %s\n", resp.Object.SystemHeader.CID)
-	fmt.Printf("  Payload Size: %s\n", bytefmt.ByteSize(resp.Object.SystemHeader.PayloadLength))
+	fmt.Printf("  Payload Size: %s\n", object.ByteSize(resp.Object.SystemHeader.PayloadLength))
 	fmt.Printf("  Version     : %d\n", resp.Object.SystemHeader.Version)
 	fmt.Printf("  Created at  : epoch #%d, %s\n", resp.Object.SystemHeader.CreatedAt.Epoch, time.Unix(resp.Object.SystemHeader.CreatedAt.UnixTime, 0))
 	if len(resp.Object.Headers) != 0 {
