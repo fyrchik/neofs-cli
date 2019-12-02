@@ -1,14 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 )
 
 type setMode int
@@ -99,6 +105,36 @@ func setCommand(mode setMode) cli.ActionFunc {
 
 		return nil
 	}
+}
+
+func connect(ctx context.Context, c *cli.Context) (*grpc.ClientConn, error) {
+	if c.Bool(verboseFlag) {
+		log := grpclog.NewLoggerV2WithVerbosity(os.Stdin, os.Stdin, os.Stderr, 40)
+		grpclog.SetLoggerV2(log)
+	}
+
+	return grpc.DialContext(ctx, getHost(c),
+		grpc.WithBlock(),
+		grpc.WithInsecure())
+}
+
+func gracefulContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+
+	go func() {
+		sig := <-ch
+
+		fmt.Printf("\nsignal: %s\n", sig)
+		cancel()
+
+		time.AfterFunc(time.Second*5, func() {
+			os.Exit(2)
+		})
+	}()
+	return ctx
 }
 
 func parseHostValue(val string) (string, error) {

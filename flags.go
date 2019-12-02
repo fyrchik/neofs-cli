@@ -11,18 +11,19 @@ import (
 )
 
 const (
-	hostFlag   = "host"
-	objFlag    = "oid"
-	cidFlag    = "cid"
-	keyFlag    = "key"
-	permFlag   = "perm"
-	fileFlag   = "file"
-	sgidFlag   = "sgid"
-	ttlFlag    = "ttl"
-	widFlag    = "wid"
-	heightFlag = "height"
-	amountFlag = "amount"
-	sgFlag     = "sg"
+	hostFlag    = "host"
+	objFlag     = "oid"
+	cidFlag     = "cid"
+	keyFlag     = "key"
+	permFlag    = "perm"
+	fileFlag    = "file"
+	sgidFlag    = "sgid"
+	ttlFlag     = "ttl"
+	widFlag     = "wid"
+	heightFlag  = "height"
+	amountFlag  = "amount"
+	sgFlag      = "sg"
+	verboseFlag = "verbose"
 
 	ConfigFlag = "config"
 
@@ -30,6 +31,11 @@ const (
 )
 
 var (
+	verbose = &cli.BoolFlag{
+		Name:  verboseFlag,
+		Usage: "verbose gRPC connection",
+	}
+
 	keyFile = &cli.StringFlag{
 		Name:    keyFlag,
 		EnvVars: []string{KeyEnvValue},

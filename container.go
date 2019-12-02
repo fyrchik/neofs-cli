@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -63,6 +62,7 @@ func putContainer(c *cli.Context) error {
 		host   = getHost(c)
 		msgID  refs.MessageID
 		conn   *grpc.ClientConn
+		ctx    = gracefulContext()
 		cCap   = c.Uint64(capFlag)
 		sRule  = c.String(ruleFlag)
 		plRule *netmap.PlacementRule
@@ -76,10 +76,7 @@ func putContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "placement rule parse failed %s", sRule)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
@@ -157,6 +154,7 @@ func getContainer(c *cli.Context) error {
 		host = getHost(c)
 		conn *grpc.ClientConn
 		sCID = c.String(cidFlag)
+		ctx  = gracefulContext()
 	)
 
 	if sCID == "" {
@@ -167,10 +165,7 @@ func getContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -199,6 +194,7 @@ func delContainer(c *cli.Context) error {
 		host = getHost(c)
 		conn *grpc.ClientConn
 		sCID = c.String(cidFlag)
+		ctx  = gracefulContext()
 	)
 
 	if sCID == "" {
@@ -209,10 +205,7 @@ func delContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -231,12 +224,10 @@ func listContainers(c *cli.Context) error {
 		key  = getKey(c)
 		host = getHost(c)
 		conn *grpc.ClientConn
+		ctx  = gracefulContext()
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 

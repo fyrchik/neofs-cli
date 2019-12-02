@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/refs"
@@ -73,6 +71,7 @@ func putSG(c *cli.Context) error {
 		cid  refs.CID
 		oids []refs.ObjectID
 
+		ctx            = gracefulContext()
 		strContainerID = c.String(cidFlag)
 		strObjectIDs   = c.StringSlice(objFlag)
 	)
@@ -96,11 +95,7 @@ func putSG(c *cli.Context) error {
 		oids = append(oids, oid)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 

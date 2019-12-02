@@ -136,6 +136,7 @@ func del(c *cli.Context) error {
 
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
+		ctx    = gracefulContext()
 	)
 
 	if cidArg == "" || objArg == "" {
@@ -150,11 +151,7 @@ func del(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse object id '%s'", objArg)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -207,6 +204,7 @@ func head(c *cli.Context) error {
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
 		fh     = c.Bool(fullHeadersFlag)
+		ctx    = gracefulContext()
 	)
 
 	if cidArg == "" || objArg == "" {
@@ -221,11 +219,7 @@ func head(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse object id '%s'", objArg)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -273,6 +267,7 @@ func search(c *cli.Context) error {
 		qArgs  = c.Args()
 		isRoot = c.Bool(rootFlag)
 		sg     = c.Bool(sgFlag)
+		ctx    = gracefulContext()
 	)
 
 	if cidArg == "" {
@@ -310,11 +305,7 @@ func search(c *cli.Context) error {
 		return errors.Wrap(err, "can't marshal query")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -351,6 +342,7 @@ func getRange(c *cli.Context) error {
 		cidArg = c.String(cidFlag)
 		objArg = c.String(objFlag)
 		rngArg = c.Args()
+		ctx    = gracefulContext()
 	)
 
 	if cidArg == "" || objArg == "" {
@@ -370,11 +362,7 @@ func getRange(c *cli.Context) error {
 		return errors.Wrap(err, "can't parse ranges")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -416,6 +404,7 @@ func getRangeHash(c *cli.Context) error {
 		fPath   = c.String(fileFlag)
 		perm    = c.Int(permFlag)
 		rngArg  = c.Args()
+		ctx     = gracefulContext()
 	)
 
 	if cidArg == "" || objArg == "" || saltArg == "" || len(fPath) == 0 {
@@ -439,11 +428,7 @@ func getRangeHash(c *cli.Context) error {
 		return errors.Wrap(err, "can't parse ranges")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -528,6 +513,7 @@ func put(c *cli.Context) error {
 		perm   = c.Int(permFlag)
 		verify = c.Bool(verifyFlag)
 		userH  = c.StringSlice(userHeaderFlag)
+		ctx    = gracefulContext()
 	)
 
 	if sCID == "" || len(fPaths) == 0 {
@@ -538,10 +524,7 @@ func put(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
@@ -768,6 +751,7 @@ func get(c *cli.Context) error {
 		sOID  = c.String(objFlag)
 		fPath = c.String(fileFlag)
 		perm  = c.Int(permFlag)
+		ctx   = gracefulContext()
 	)
 
 	if sCID == "" || sOID == "" || len(fPath) == 0 {
@@ -782,10 +766,7 @@ func get(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse Object ID %s", sOID)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 

@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"text/tabwriter"
-	"time"
 
 	"github.com/nspcc-dev/neofs-proto/accounting"
 	"github.com/nspcc-dev/neofs-proto/decimal"
@@ -29,12 +27,10 @@ func getBalance(c *cli.Context) error {
 		key  = getKey(c)
 		host = getHost(c)
 		conn *grpc.ClientConn
+		ctx  = gracefulContext()
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure()); err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
