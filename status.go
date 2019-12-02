@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -39,13 +38,10 @@ func getMetrics(c *cli.Context) error {
 		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.MetricsRequest)
+		ctx  = gracefulContext()
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
@@ -80,13 +76,10 @@ func getHealthy(c *cli.Context) error {
 		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.HealthRequest)
+		ctx  = gracefulContext()
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
@@ -109,13 +102,10 @@ func getEpoch(c *cli.Context) error {
 		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.NetmapRequest)
+		ctx  = gracefulContext()
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
@@ -137,13 +127,10 @@ func getNetmap(c *cli.Context) error {
 		host = getHost(c)
 		conn *grpc.ClientConn
 		req  = new(state.NetmapRequest)
+		ctx  = gracefulContext()
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	conn, err = grpc.DialContext(ctx, host, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
+	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "could not connect to host %s", host)
 	}
 
