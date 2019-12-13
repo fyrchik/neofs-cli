@@ -48,10 +48,14 @@ COMMANDS:
    help, h     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --ttl value     request ttl (default: 0)
+   --ttl value     request ttl (default: 2)
    --config value  config (default: ".neofs-cli.yml") [$NEOFS_CLI_CONFIG]
-   --help, -h      show help
-   --version, -v   print the version
+   --key value     user private key in hex, wif formats or path to file [$NEOFS_CLI_KEY]
+   --host value    host net address [$NEOFS_CLI_ADDRESS]
+   --verbose       verbose gRPC connection (default: false)
+   --help, -h      show help (default: false)
+   --version, -v   print the version (default: false)
+
 ```
 ### Configuration
 
@@ -93,7 +97,7 @@ To perform storage operations like container creation or storage payment user
 must have a deposit. To check available deposit run:
 
 ```
-$ ./bin/neofs-cli accounting --host fs.nspcc.ru:8080 balance --key ./key 
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key accounting balance 
 Balance info:
 - Active balance: 50
 ```
@@ -107,7 +111,7 @@ policy. There is an example of new container that stores data in three copies.
 inner ring nodes**
 
 ```
-$ ./bin/neofs-cli container --host fs.nspcc.ru:8080 put  --key ./key \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key container put \
 --rule 'SELECT 3 Node'
 
 Container processed: 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG
@@ -123,7 +127,7 @@ User can upload the object when container is created. You can specify
 user headers that will be put into object's header.
 
 ```
-$ ./bin/neofs-cli object --host fs.nspcc.ru:8080 put  --key ./key \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key object put \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 --file ./cat_picture.png \
 --user "Nicename"="cat_picture.png"
@@ -138,7 +142,7 @@ $ ./bin/neofs-cli object --host fs.nspcc.ru:8080 put  --key ./key \
 All correctly uploaded objects are accessible from CLI application.
 
 ```
-$ ./bin/neofs-cli object --host fs.nspcc.ru:8080 get \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key object get \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 --oid e35f3596-2cde-4d3e-b57a-752ed687b79a \
 --file ./cat_from_neofs.png
@@ -156,7 +160,7 @@ ca940fbc2b7031bd07b510baf397ab01  cat_picture.png
 You can get object's headers without downloading it from NeoFS.
 
 ```
-$ ./bin/neofs-cli object --host fs.nspcc.ru:8080 head \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key object head \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 --oid e35f3596-2cde-4d3e-b57a-752ed687b79a \
 --full-headers
@@ -178,7 +182,7 @@ Other headers:
 
 You can also search by well known or user defined headers
 ```
-$ ./bin/neofs-cli object --host fs.nspcc.ru:8080 search \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key object search \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 Nicename cat_picture.png
 
@@ -193,7 +197,7 @@ receiving payments, they will eventually delete objects. To prevent this
 user should create storage group for it's objects.
 
 ```
-$ ./bin/neofs-cli sg --host fs.nspcc.ru:8080 put --key ./key \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key sg put \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 --oid e35f3596-2cde-4d3e-b57a-752ed687b79a \
 --oid 79ecc573-92c9-4066-8546-96e16e980700 
@@ -206,7 +210,7 @@ Storage group successfully stored
 You can list created storage groups,
 
 ```
-$ ./bin/neofs-cli sg --host fs.nspcc.ru:8080 list \ 
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key sg list \ 
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG
 
 Container ID: Object ID
@@ -216,7 +220,7 @@ Container ID: Object ID
 and look for details. Storage group is stored as an object in the container.
 
 ```
-$ ./bin/neofs-cli sg --host fs.nspcc.ru:8080 get \
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key sg get \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 --sgid a220d19f-78ca-4574-ac1b-d7b246e929b5
 
