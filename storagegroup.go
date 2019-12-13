@@ -7,6 +7,7 @@ import (
 	"github.com/nspcc-dev/neofs-proto/object"
 	"github.com/nspcc-dev/neofs-proto/refs"
 	"github.com/nspcc-dev/neofs-proto/session"
+	"github.com/nspcc-dev/neofs-proto/storagegroup"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -118,7 +119,7 @@ func putSG(c *cli.Context) error {
 		}})
 	}
 
-	sg.SetStorageGroup(new(object.StorageGroup))
+	sg.SetStorageGroup(new(storagegroup.StorageGroup))
 
 	objID, err := refs.NewObjectID()
 	if err != nil {
