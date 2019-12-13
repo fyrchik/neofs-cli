@@ -461,8 +461,11 @@ func getRangeHash(c *cli.Context) error {
 			if _, err = fd.ReadAt(d, int64(ranges[i].Offset)); err != nil && err != io.EOF {
 				return errors.Wrap(err, "could not read range from file")
 			}
+
+			xor := hash.SaltXOR(d[:ranges[i].Length], salt)
+
 			fmt.Print("(")
-			if !hash.Sum(d[:ranges[i].Length]).Equal(resp.Hashes[i]) {
+			if !hash.Sum(xor).Equal(resp.Hashes[i]) {
 				fmt.Print("in")
 			}
 			fmt.Print("valid) ")
