@@ -12,7 +12,7 @@ WORKDIR /src
 
 COPY . /src
 
-RUN go build -v -mod=vendor -ldflags "${LDFLAGS}" -o /go/bin/neofs-cli ./
+RUN go build -v -mod=vendor -trimpath -ldflags "${LDFLAGS}" -o /go/bin/neofs-cli ./
 
 # Executable image
 FROM alpine:3.10 AS neofs-cli

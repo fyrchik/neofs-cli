@@ -16,6 +16,7 @@ builds:
       - amd64
     flags:
       - -mod=vendor
+      - -trimpath
     ldflags:
       - -w -s -X main.Version={{.Version}} -X main.Build={{ time "2006-01-02T15:04:05" }}
 archives:
