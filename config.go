@@ -35,8 +35,6 @@ const (
 func beforeAction(c *cli.Context) error {
 	if args := c.Args(); args.Len() == 0 { // ignore help command
 		return nil
-	} else if args.First() == "set" { // ignore set command
-		return nil
 	}
 
 	// do something before command
