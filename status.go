@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nspcc-dev/neofs-proto/service"
 	"github.com/nspcc-dev/neofs-proto/state"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/expfmt"
@@ -30,7 +31,39 @@ var (
 	healthyAction = &action{
 		Action: getHealthy,
 	}
+
+	configAction = &action{
+		Action: getConfig,
+	}
 )
+
+func getConfig(c *cli.Context) error {
+	var (
+		err  error
+		host = getHost(c)
+		conn *grpc.ClientConn
+		req  = new(state.DumpRequest)
+		ctx  = gracefulContext()
+	)
+
+	if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "could not connect to host %s", host)
+	}
+
+	req.SetTTL(service.NonForwardingTTL)
+	signRequest(c, req)
+
+	res, err := state.NewStatusClient(conn).DumpConfig(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "status command failed on remote call")
+	}
+
+	if _, err = os.Stdout.Write(res.Config); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func getMetrics(c *cli.Context) error {
 	var (

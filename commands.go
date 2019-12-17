@@ -262,6 +262,14 @@ func commands() cli.Commands {
 					Flags:       getFlags(GetHealthy),
 					Action:      getAction(GetHealthy),
 				},
+				{
+					Name:        "config",
+					Usage:       "dump config of specified node",
+					UsageText:   "neofs-cli --host <host:port> --key <key:path|hex|wif> status config",
+					Description: "allows dumping runtime config of specified node",
+					Flags:       getFlags(GetConfig),
+					Action:      getAction(GetConfig),
+				},
 			},
 		},
 	}

@@ -45,6 +45,7 @@ const (
 	GetNetmap
 	GetMetrics
 	GetHealthy
+	GetConfig
 )
 
 type action struct {
@@ -97,6 +98,7 @@ var actions = map[actionName]*action{
 	GetNetmap:  netmapAction,
 	GetMetrics: metricsAction,
 	GetHealthy: healthyAction,
+	GetConfig:  configAction,
 }
 
 func getFlags(name actionName) []cli.Flag {
