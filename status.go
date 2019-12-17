@@ -58,9 +58,7 @@ func getConfig(c *cli.Context) error {
 		return errors.Wrap(err, "status command failed on remote call")
 	}
 
-	if _, err = os.Stdout.Write(res.Config); err != nil {
-		return err
-	}
+	_, err = os.Stdout.Write(res.Config)
 
 	return nil
 }

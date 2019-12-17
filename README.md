@@ -241,6 +241,92 @@ Other headers:
   Integrity: ...
 ```
 
+### Status operations
+
+User can request some information about NeoFS node:
+- current network map
+- current epoch
+- current health status
+- current metrics
+- runtime config
+
+#### Request current network map and epoch
+
+**Network map:**
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status netmap
+{
+    "Epoch": 81,
+    "NetMap": [{
+        "address": "/ip4/165.22.29.184/tcp/8080",
+        "pubkey": "AlQKAP3VM2LlSACi8sZjD2tuPXbBqMSU6e+KYUSalbcT",
+        "options": ["/Location:Europe/Country:DE/City:Frankfurt", "/Capacity:45", "/Price:20.5"],
+        "status": 0
+    }, ...]
+}
+```
+
+**Epoch:**
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status epoch
+81
+```
+
+#### Request metrics and health status
+
+**Metrics:**
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status metrics
+# HELP go_gc_duration_seconds A summary of the GC invocation durations.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 4.74e-05
+go_gc_duration_seconds{quantile="0.25"} 0.0001421
+go_gc_duration_seconds{quantile="0.5"} 0.0004501
+go_gc_duration_seconds{quantile="0.75"} 0.0033215
+go_gc_duration_seconds{quantile="1"} 0.0428934
+go_gc_duration_seconds_sum 0.1292919
+go_gc_duration_seconds_count 47
+...
+```
+
+**Health status:**
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status healthy
+Healthy: true
+Status: OK
+```
+
+#### Request runtime config
+
+*Node must be configured to grant access for certain users. Authentication is made by passed key.*
+
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status config
+{
+  "accounting": {
+    "events_capacity": 100,
+    "log": {
+      "balance_lack": false,
+      "frs_sum": false
+    }
+  },
+  "app": {
+    "name": "neofs-node",
+    "version": "0.2.4-4-ge9a43b78(now)"
+  },
+  "apparitor": {
+    "handle_epoch_timeout": "3s",
+    "prison_term": 2
+  },
+  "audit": {
+    "epoch_chan_capacity": 100,
+    "ir_reward_fee_percents": 1,
+    "result_chan_capacity": 100
+  },
+  ...
+}
+```
+
 ## License
 
 This project is licensed under the GPLv3 License - 

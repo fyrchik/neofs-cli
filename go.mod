@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/mr-tron/base58 v1.1.3
 	github.com/nspcc-dev/neofs-crypto v0.2.2
-	github.com/nspcc-dev/neofs-proto v0.2.6
+	github.com/nspcc-dev/neofs-proto v0.2.7
 	github.com/nspcc-dev/netmap v1.6.1
 	github.com/nspcc-dev/netmap-ql v1.2.0
 	github.com/pkg/errors v0.8.1
@@ -15,3 +15,6 @@ require (
 	github.com/urfave/cli/v2 v2.0.0
 	google.golang.org/grpc v1.25.1
 )
+
+// Temporary, before we move repo to github:
+// replace github.com/nspcc-dev/neofs-proto => ../neofs-proto
