@@ -4,8 +4,8 @@ go 1.13
 
 require (
 	github.com/mr-tron/base58 v1.1.3
-	github.com/nspcc-dev/neofs-crypto v0.2.2
-	github.com/nspcc-dev/neofs-proto v0.2.8
+	github.com/nspcc-dev/neofs-crypto v0.2.3
+	github.com/nspcc-dev/neofs-proto v0.2.11
 	github.com/nspcc-dev/netmap v1.6.1
 	github.com/nspcc-dev/netmap-ql v1.2.0
 	github.com/pkg/errors v0.8.1

@@ -42,6 +42,7 @@ const (
 	verifyFlag      = "verify"
 	rootFlag        = "root"
 	userHeaderFlag  = "user"
+	rawFlag         = "raw"
 
 	dataChunkSize = 3 * object.UnitsMB
 )
@@ -71,6 +72,7 @@ var (
 			objectID,
 			filePath,
 			permissions,
+			rawQuery,
 		},
 	}
 	delObjectAction = &action{
@@ -86,6 +88,7 @@ var (
 			containerID,
 			objectID,
 			fullHeaders,
+			rawQuery,
 		},
 	}
 	searchObjectAction = &action{
@@ -205,6 +208,7 @@ func head(c *cli.Context) error {
 		objArg = c.String(objFlag)
 		fh     = c.Bool(fullHeadersFlag)
 		ctx    = gracefulContext()
+		raw    = c.Bool(rawFlag)
 	)
 
 	if cidArg == "" || objArg == "" {
@@ -229,6 +233,7 @@ func head(c *cli.Context) error {
 			ObjectID: objID,
 		},
 		FullHeaders: fh,
+		Raw:         raw,
 	}
 	setTTL(c, req)
 	signRequest(c, req)
@@ -689,6 +694,7 @@ func establishSession(ctx context.Context, p sessionParams) (*session.Token, err
 		FirstEpoch: p.token.FirstEpoch,
 		LastEpoch:  p.token.LastEpoch,
 	}
+	token.SetPublicKeys(&p.key.PublicKey)
 
 	req := session.NewInitRequest(token)
 	setTTL(p.cmd, req)
@@ -754,6 +760,7 @@ func get(c *cli.Context) error {
 		sOID  = c.String(objFlag)
 		fPath = c.String(fileFlag)
 		perm  = c.Int(permFlag)
+		raw   = c.Bool(rawFlag)
 		ctx   = gracefulContext()
 	)
 
@@ -778,6 +785,7 @@ func get(c *cli.Context) error {
 			ObjectID: oid,
 			CID:      cid,
 		},
+		Raw: raw,
 	}
 	setTTL(c, req)
 	signRequest(c, req)
