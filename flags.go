@@ -125,6 +125,11 @@ var (
 		Name:  fullHeadersFlag,
 		Usage: "return all headers",
 	}
+
+	rawQuery = &cli.BoolFlag{
+		Name:  rawFlag,
+		Usage: "send request with raw flag set",
+	}
 )
 
 func signRequest(c *cli.Context, req service.VerifiableRequest) {
