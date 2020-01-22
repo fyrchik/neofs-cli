@@ -689,6 +689,7 @@ func establishSession(ctx context.Context, p sessionParams) (*session.Token, err
 		FirstEpoch: p.token.FirstEpoch,
 		LastEpoch:  p.token.LastEpoch,
 	}
+	token.SetPublicKeys(&p.key.PublicKey)
 
 	req := session.NewInitRequest(token)
 	setTTL(p.cmd, req)
