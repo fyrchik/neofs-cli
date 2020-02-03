@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nspcc-dev/neofs-api/service"
 	crypto "github.com/nspcc-dev/neofs-crypto"
-	"github.com/nspcc-dev/neofs-proto/service"
 	"github.com/urfave/cli/v2"
 )
 
