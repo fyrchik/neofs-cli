@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nspcc-dev/neofs-proto/service"
-	"github.com/nspcc-dev/neofs-proto/state"
+	"github.com/nspcc-dev/neofs-api/service"
+	"github.com/nspcc-dev/neofs-api/state"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/expfmt"
 	"github.com/urfave/cli/v2"
