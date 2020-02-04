@@ -262,10 +262,11 @@ func head(c *cli.Context) error {
 
 func search(c *cli.Context) error {
 	var (
-		err  error
-		conn *grpc.ClientConn
-		cid  refs.CID
-		q    query.Query
+		err    error
+		conn   *grpc.ClientConn
+		cid    refs.CID
+		q      query.Query
+		result []refs.Address
 
 		host   = getHost(c)
 		cidArg = c.String(cidFlag)
@@ -322,14 +323,25 @@ func search(c *cli.Context) error {
 	setTTL(c, req)
 	signRequest(c, req)
 
-	resp, err := object.NewServiceClient(conn).Search(ctx, req)
+	searchClient, err := object.NewServiceClient(conn).Search(ctx, req)
 	if err != nil {
-		return errors.Wrap(err, "can't perform SEARCH request")
+		return errors.Wrap(err, "search command failed on client creation")
+	}
+
+	for {
+		resp, err := searchClient.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return errors.Wrap(err, "search command received error")
+		}
+		result = append(result, resp.Addresses...)
 	}
 
 	fmt.Println("Container ID: Object ID")
-	for i := range resp.Addresses {
-		fmt.Println(resp.Addresses[i].CID.String() + ": " + resp.Addresses[i].ObjectID.String())
+	for i := range result {
+		fmt.Println(result[i].CID.String() + ": " + result[i].ObjectID.String())
 	}
 
 	return nil
