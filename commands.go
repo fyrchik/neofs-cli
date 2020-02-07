@@ -75,7 +75,7 @@ func commands() cli.Commands {
 				{
 					Name:      "get-range",
 					Usage:     "get data of the object payload ranges from container",
-					UsageText: "get-range --cid <cid> --oid <oid> [<offset1>:<length1> [...]]",
+					UsageText: "get-range --cid <cid> --oid <oid> <offset>:<length>",
 					Flags:     getFlags(GetRangeObject),
 					Action:    getAction(GetRangeObject),
 				},

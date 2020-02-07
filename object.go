@@ -379,6 +379,10 @@ func getRange(c *cli.Context) error {
 		return errors.Wrap(err, "can't parse ranges")
 	}
 
+	if len(ranges) != 1 {
+		return errors.New("specify one range")
+	}
+
 	if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
@@ -388,18 +392,28 @@ func getRange(c *cli.Context) error {
 			ObjectID: objID,
 			CID:      cid,
 		},
-		Ranges: ranges,
+		Range: ranges[0],
 	}
 	setTTL(c, req)
 	signRequest(c, req)
 
-	resp, err := object.NewServiceClient(conn).GetRange(ctx, req)
+	rangeClient, err := object.NewServiceClient(conn).GetRange(ctx, req)
 	if err != nil {
-		return errors.Wrap(err, "can't perform GETRANGE request")
+		return errors.Wrap(err, "can't perform get-range request")
 	}
 
-	// TODO process response
-	_ = resp
+	var result []byte
+	for {
+		resp, err := rangeClient.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return errors.Wrap(err, "get-range command received error")
+		}
+		result = append(result, resp.Fragment...)
+	}
+	fmt.Println(hex.EncodeToString(result))
 
 	return nil
 }
