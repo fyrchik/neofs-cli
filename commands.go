@@ -270,6 +270,14 @@ func commands() cli.Commands {
 					Flags:       getFlags(GetConfig),
 					Action:      getAction(GetConfig),
 				},
+				{
+					Name:        "dump_vars",
+					Usage:       "dump debug variables of specified node",
+					UsageText:   "neofs-cli --host <host:port> --key <key:path|hex|wif> status dump_vars",
+					Description: "allows dumping debug variables of specified node",
+					Flags:       getFlags(GetDebugVars),
+					Action:      getAction(GetDebugVars),
+				},
 			},
 		},
 	}

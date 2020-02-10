@@ -24,6 +24,7 @@ const (
 	amountFlag  = "amount"
 	sgFlag      = "sg"
 	verboseFlag = "verbose"
+	beautyFlag  = "beauty"
 
 	ConfigFlag = "config"
 

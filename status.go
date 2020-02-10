@@ -35,7 +35,50 @@ var (
 	configAction = &action{
 		Action: getConfig,
 	}
+
+	dumpVarsAction = &action{
+		Action: getVars,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{Name: "beauty"},
+		},
+	}
 )
+
+func getVars(c *cli.Context) error {
+	var (
+		err  error
+		host = getHost(c)
+		conn *grpc.ClientConn
+		req  = new(state.DumpVarsRequest)
+		ctx  = gracefulContext()
+	)
+
+	if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "could not connect to host %s", host)
+	}
+
+	req.SetTTL(service.NonForwardingTTL)
+	signRequest(c, req)
+
+	res, err := state.NewStatusClient(conn).DumpVars(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "status command failed on remote call")
+	}
+
+	if !c.Bool(beautyFlag) {
+		_, err = os.Stdout.Write(res.Variables)
+		return err
+	}
+
+	dump := make(map[string]interface{})
+	if err = json.Unmarshal(res.Variables, &dump); err != nil {
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "\t")
+	return enc.Encode(dump)
+}
 
 func getConfig(c *cli.Context) error {
 	var (
