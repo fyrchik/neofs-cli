@@ -46,6 +46,7 @@ const (
 	GetMetrics
 	GetHealthy
 	GetConfig
+	GetDebugVars
 )
 
 type action struct {
@@ -93,12 +94,13 @@ var actions = map[actionName]*action{
 	BalanceAccounting: getBalanceAction,
 
 	// status commands
-	Status:     statusAction,
-	GetEpoch:   epochAction,
-	GetNetmap:  netmapAction,
-	GetMetrics: metricsAction,
-	GetHealthy: healthyAction,
-	GetConfig:  configAction,
+	Status:       statusAction,
+	GetEpoch:     epochAction,
+	GetNetmap:    netmapAction,
+	GetMetrics:   metricsAction,
+	GetHealthy:   healthyAction,
+	GetConfig:    configAction,
+	GetDebugVars: dumpVarsAction,
 }
 
 func getFlags(name actionName) []cli.Flag {
