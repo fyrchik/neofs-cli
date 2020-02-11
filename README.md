@@ -327,6 +327,21 @@ $ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status config
 }
 ```
 
+#### Request runtime debug variables
+
+*Node must be configured to grant access for certain users. Authentication is made by passed key.*
+
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status dump_vars
+{...} // variables in ugly json (without formatting)
+
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status dump_vars --beauty
+// variables in json with formatting
+{
+  // ...
+}
+```
+
 ## License
 
 This project is licensed under the GPLv3 License - 
