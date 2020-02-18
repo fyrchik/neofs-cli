@@ -118,13 +118,13 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/nspcc-dev/hrw v1.0.1/go.mod h1:2gbvQ0nRi9+er+djibFyMLMWC8Ilwe7Z9pYCU6OrkMM=
 github.com/nspcc-dev/hrw v1.0.8 h1:vwRuJXZXgkMvf473vFzeWGCfY1WBVeSHAEHvR4u3/Cg=
 github.com/nspcc-dev/hrw v1.0.8/go.mod h1:l/W2vx83vMQo6aStyx2AuZrJ+07lGv2JQGlVkPG06MU=
-github.com/nspcc-dev/neofs-api v0.3.2 h1:w5s7rqnv0wwh+BpSrSlxpTTiQzzjryTigcPFxn6cxJc=
-github.com/nspcc-dev/neofs-api v0.3.2/go.mod h1:Y1PQ6nEZyA6sZPDHJxgPWWeT1oU2bKL1N0rpFQ4B/fk=
 github.com/nspcc-dev/neofs-crypto v0.2.3 h1:aca3X2aly92ENRbFK+kH6Hd+J9EQ4Eu6XMVoITSIKtc=
 github.com/nspcc-dev/neofs-crypto v0.2.3/go.mod h1:8w16GEJbH6791ktVqHN9YRNH3s9BEEKYxGhlFnp0cDw=
 github.com/nspcc-dev/netmap v1.2.0/go.mod h1:9vt5vDTHP0BdhUluQek4iFfMv+pCv5b1Kg7eM6WyQl8=
 github.com/nspcc-dev/netmap v1.6.1 h1:Pigqpqi6QSdRiusbq5XlO20A18k6Eyu7j9MzOfAE3CM=
 github.com/nspcc-dev/netmap v1.6.1/go.mod h1:mhV3UOg9ljQmu0teQShD6+JYX09XY5gu2I4hIByCH9M=
+github.com/nspcc-dev/netmap v1.7.0 h1:ak64xn/gPdgYw4tsqSSF7kAGQGbEpeuJEF3XwBX4L9Y=
+github.com/nspcc-dev/netmap v1.7.0/go.mod h1:mhV3UOg9ljQmu0teQShD6+JYX09XY5gu2I4hIByCH9M=
 github.com/nspcc-dev/netmap-ql v1.2.0 h1:8JvICU63eOwmrMUJiASsKqLE2GJV17EJqbyNlzgvHJw=
 github.com/nspcc-dev/netmap-ql v1.2.0/go.mod h1:n96T6CNDp94mR2tTPhCZHGCJqoQGESSDP+Fj/XOGES4=
 github.com/nspcc-dev/rfc6979 v0.2.0 h1:3e1WNxrN60/6N0DW7+UYisLeZJyfqZTNOjeV/toYvOE=
