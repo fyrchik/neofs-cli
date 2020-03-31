@@ -35,3 +35,6 @@ image: deps
 		--build-arg VERSION=$(VERSION) \
 		 -f Dockerfile \
 		 -t $(HUB_IMAGE)-cli:$(VERSION) .
+
+release:
+	@goreleaser --rm-dist

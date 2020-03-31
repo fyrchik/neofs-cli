@@ -6,9 +6,9 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/nspcc-dev/neofs-api/accounting"
-	"github.com/nspcc-dev/neofs-api/decimal"
-	"github.com/nspcc-dev/neofs-api/refs"
+	"github.com/nspcc-dev/neofs-api-go/accounting"
+	"github.com/nspcc-dev/neofs-api-go/decimal"
+	"github.com/nspcc-dev/neofs-api-go/refs"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"

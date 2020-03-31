@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nspcc-dev/neofs-api/container"
-	"github.com/nspcc-dev/neofs-api/object"
-	"github.com/nspcc-dev/neofs-api/refs"
+	"github.com/nspcc-dev/neofs-api-go/container"
+	"github.com/nspcc-dev/neofs-api-go/object"
+	"github.com/nspcc-dev/neofs-api-go/refs"
 	"github.com/nspcc-dev/netmap"
 	query "github.com/nspcc-dev/netmap-ql"
 	"github.com/pkg/errors"

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/nspcc-dev/neofs-api/accounting"
-	"github.com/nspcc-dev/neofs-api/decimal"
-	"github.com/nspcc-dev/neofs-api/refs"
+	"github.com/nspcc-dev/neofs-api-go/accounting"
+	"github.com/nspcc-dev/neofs-api-go/decimal"
+	"github.com/nspcc-dev/neofs-api-go/refs"
 	"github.com/nspcc-dev/neofs-crypto/test"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
