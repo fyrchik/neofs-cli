@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/nspcc-dev/neofs-api-go/container"
@@ -17,8 +19,13 @@ import (
 const (
 	ruleFlag = "rule"
 	capFlag  = "cap"
+	aclFlag  = "acl"
 
 	defaultCapacity = 1
+
+	publicContainerACLRule   = 0x1FFFFFFF
+	privateContainerACLRule  = 0x18888888
+	readonlyContainerACLRule = 0x1FFF88FF
 )
 
 var (
@@ -35,6 +42,11 @@ var (
 				Name:  capFlag,
 				Usage: "container capacity in GB",
 				Value: defaultCapacity,
+			},
+			&cli.StringFlag{
+				Name:  aclFlag,
+				Usage: "basic ACL: public, private, readonly or 32-bit hex",
+				Value: "private",
 			},
 		},
 	}
@@ -57,15 +69,17 @@ var (
 
 func putContainer(c *cli.Context) error {
 	var (
-		err    error
-		key    = getKey(c)
-		host   = getHost(c)
-		msgID  refs.MessageID
-		conn   *grpc.ClientConn
-		ctx    = gracefulContext()
-		cCap   = c.Uint64(capFlag)
-		sRule  = c.String(ruleFlag)
-		plRule *netmap.PlacementRule
+		err      error
+		basicACL uint64
+		key      = getKey(c)
+		host     = getHost(c)
+		msgID    refs.MessageID
+		conn     *grpc.ClientConn
+		ctx      = gracefulContext()
+		cCap     = c.Uint64(capFlag)
+		sRule    = c.String(ruleFlag)
+		sACL     = strings.TrimLeft(c.String(aclFlag), "0x")
+		plRule   *netmap.PlacementRule
 	)
 
 	if sRule == "" || cCap == 0 {
@@ -84,6 +98,20 @@ func putContainer(c *cli.Context) error {
 		return errors.Wrap(err, "could not create message ID")
 	}
 
+	switch sACL {
+	case "public":
+		basicACL = publicContainerACLRule
+	case "private":
+		basicACL = privateContainerACLRule
+	case "readonly":
+		basicACL = readonlyContainerACLRule
+	default:
+		basicACL, err = strconv.ParseUint(sACL, 16, 32)
+		if err != nil {
+			return errors.Wrap(err, "incorrect basic ACL")
+		}
+	}
+
 	owner, err := refs.NewOwnerID(&key.PublicKey)
 	if err != nil {
 		return errors.Wrap(err, "could not compute owner ID")
@@ -94,6 +122,7 @@ func putContainer(c *cli.Context) error {
 		Capacity:  cCap * uint64(object.UnitsGB),
 		OwnerID:   owner,
 		Rules:     *plRule,
+		BasicACL:  uint32(basicACL),
 	}
 
 	setTTL(c, req)
