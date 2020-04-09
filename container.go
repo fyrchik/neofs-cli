@@ -23,8 +23,9 @@ const (
 
 	defaultCapacity = 1
 
-	publicContainerACLRule  = "0x1FFFFFFF"
-	privateContainerACLRule = "0x18888888"
+	publicContainerACLRule   = 0x1FFFFFFF
+	privateContainerACLRule  = 0x18888888
+	readonlyContainerACLRule = 0x1FFF88FF
 )
 
 var (
@@ -44,8 +45,8 @@ var (
 			},
 			&cli.StringFlag{
 				Name:  aclFlag,
-				Usage: "container basic ACL",
-				Value: publicContainerACLRule,
+				Usage: "basic ACL: public, private, readonly or 32-bit hex",
+				Value: "private",
 			},
 		},
 	}
@@ -68,16 +69,17 @@ var (
 
 func putContainer(c *cli.Context) error {
 	var (
-		err    error
-		key    = getKey(c)
-		host   = getHost(c)
-		msgID  refs.MessageID
-		conn   *grpc.ClientConn
-		ctx    = gracefulContext()
-		cCap   = c.Uint64(capFlag)
-		sRule  = c.String(ruleFlag)
-		sACL   = strings.TrimLeft(c.String(aclFlag), "0x")
-		plRule *netmap.PlacementRule
+		err      error
+		basicACL uint64
+		key      = getKey(c)
+		host     = getHost(c)
+		msgID    refs.MessageID
+		conn     *grpc.ClientConn
+		ctx      = gracefulContext()
+		cCap     = c.Uint64(capFlag)
+		sRule    = c.String(ruleFlag)
+		sACL     = strings.TrimLeft(c.String(aclFlag), "0x")
+		plRule   *netmap.PlacementRule
 	)
 
 	if sRule == "" || cCap == 0 {
@@ -96,9 +98,18 @@ func putContainer(c *cli.Context) error {
 		return errors.Wrap(err, "could not create message ID")
 	}
 
-	basicACL, err := strconv.ParseUint(sACL, 16, 32)
-	if err != nil {
-		return errors.Wrap(err, "incorrect basic ACL")
+	switch sACL {
+	case "public":
+		basicACL = publicContainerACLRule
+	case "private":
+		basicACL = privateContainerACLRule
+	case "readonly":
+		basicACL = readonlyContainerACLRule
+	default:
+		basicACL, err = strconv.ParseUint(sACL, 16, 32)
+		if err != nil {
+			return errors.Wrap(err, "incorrect basic ACL")
+		}
 	}
 
 	owner, err := refs.NewOwnerID(&key.PublicKey)
