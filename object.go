@@ -292,6 +292,10 @@ func search(c *cli.Context) error {
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
+	} else if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "can't connect to host '%s'", host)
+	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
+		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	for i := 0; i < qArgs.Len(); i += 2 {
@@ -317,10 +321,6 @@ func search(c *cli.Context) error {
 	data, err := q.Marshal()
 	if err != nil {
 		return errors.Wrap(err, "can't marshal query")
-	}
-
-	if conn, err = connect(ctx, c); err != nil {
-		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
 	req := &object.SearchRequest{
