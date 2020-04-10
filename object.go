@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nspcc-dev/neofs-api-go/container"
 	"github.com/nspcc-dev/neofs-api-go/hash"
 	"github.com/nspcc-dev/neofs-api-go/object"
 	"github.com/nspcc-dev/neofs-api-go/query"
@@ -128,13 +127,6 @@ var (
 		},
 	}
 )
-
-func fetchContainer(ctx context.Context, con *grpc.ClientConn, cid refs.CID, cli *cli.Context) (*container.GetResponse, error) {
-	req := &container.GetRequest{CID: cid}
-	setTTL(cli, req)
-	signRequest(cli, req)
-	return container.NewServiceClient(con).Get(ctx, req)
-}
 
 func del(c *cli.Context) error {
 	var (
