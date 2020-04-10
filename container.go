@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -176,6 +177,13 @@ loop:
 	return nil
 }
 
+func fetchContainer(ctx context.Context, con *grpc.ClientConn, cid refs.CID, cli *cli.Context) (*container.GetResponse, error) {
+	req := &container.GetRequest{CID: cid}
+	setTTL(cli, req)
+	signRequest(cli, req)
+	return container.NewServiceClient(con).Get(ctx, req)
+}
+
 func getContainer(c *cli.Context) error {
 	var (
 		err  error
@@ -198,11 +206,7 @@ func getContainer(c *cli.Context) error {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
-	req := &container.GetRequest{CID: cid}
-	setTTL(c, req)
-	signRequest(c, req)
-
-	resp, err := container.NewServiceClient(conn).Get(ctx, req)
+	resp, err := fetchContainer(ctx, conn, cid, c)
 	if err != nil {
 		return errors.Wrap(err, "can't perform request")
 	}
