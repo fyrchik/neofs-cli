@@ -564,10 +564,10 @@ func put(c *cli.Context) error {
 
 	if cid, err = refs.CIDFromString(sCID); err != nil {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
-	}
-
-	if conn, err = connect(ctx, c); err != nil {
+	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
+	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
+		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	owner, err := refs.NewOwnerID(&key.PublicKey)
