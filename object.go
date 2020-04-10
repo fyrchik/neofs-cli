@@ -156,14 +156,14 @@ func del(c *cli.Context) error {
 
 	if cid, err = refs.CIDFromString(cidArg); err != nil {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
+	} else if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "can't connect to host '%s'", host)
+	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
+		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	if err = objID.Parse(objArg); err != nil {
 		return errors.Wrapf(err, "can't parse object id '%s'", objArg)
-	}
-
-	if conn, err = connect(ctx, c); err != nil {
-		return errors.Wrapf(err, "can't connect to host '%s'", host)
 	}
 
 	token, err := establishSession(ctx, sessionParams{
