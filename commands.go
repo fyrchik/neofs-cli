@@ -35,7 +35,7 @@ func commands() cli.Commands {
 					Name:  "put",
 					Usage: "put object into container",
 					UsageText: "put --cid <cid> --file </path/to/file> " +
-						"[--perm <permissions>] [--verify] [--user key1=value1 ...]",
+						"[--perm <permissions>] [--verify] [--copies <number>] [--user key1=value1 ...]",
 					Description: "put user data into container",
 					Flags:       getFlags(PutObject),
 					Action:      getAction(PutObject),

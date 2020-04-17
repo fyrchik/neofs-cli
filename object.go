@@ -43,6 +43,7 @@ const (
 	rootFlag        = "root"
 	userHeaderFlag  = "user"
 	rawFlag         = "raw"
+	copiesNumFlag   = "copies"
 
 	dataChunkSize = 3 * object.UnitsMB
 )
@@ -62,6 +63,10 @@ var (
 			&cli.StringSliceFlag{
 				Name:  userHeaderFlag,
 				Usage: "provide optional user headers",
+			},
+			&cli.Uint64Flag{
+				Name:  copiesNumFlag,
+				Usage: "set number of copies to store",
 			},
 		},
 	}
@@ -548,6 +553,7 @@ func put(c *cli.Context) error {
 		verify = c.Bool(verifyFlag)
 		userH  = c.StringSlice(userHeaderFlag)
 		ctx    = gracefulContext()
+		cpNum  = c.Uint64(copiesNumFlag)
 	)
 
 	if sCID == "" || len(fPaths) == 0 {
@@ -626,7 +632,15 @@ func put(c *cli.Context) error {
 
 		fmt.Printf("[%s] Sending header...\n", fPath)
 
-		req := object.MakePutRequestHeader(obj, token)
+		req := &object.PutRequest{
+			R: &object.PutRequest_Header{
+				Header: &object.PutRequest_PutHeader{
+					Object:       obj,
+					Token:        token,
+					CopiesNumber: uint32(cpNum),
+				},
+			},
+		}
 		setTTL(c, req)
 		signRequest(c, req)
 
