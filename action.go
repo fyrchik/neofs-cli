@@ -47,6 +47,7 @@ const (
 	GetHealthy
 	GetConfig
 	GetDebugVars
+	ChangeState
 )
 
 type action struct {
@@ -101,6 +102,7 @@ var actions = map[actionName]*action{
 	GetHealthy:   healthyAction,
 	GetConfig:    configAction,
 	GetDebugVars: dumpVarsAction,
+	ChangeState:  changeStateAction,
 }
 
 func getFlags(name actionName) []cli.Flag {

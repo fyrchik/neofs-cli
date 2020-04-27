@@ -278,6 +278,14 @@ func commands() cli.Commands {
 					Flags:       getFlags(GetDebugVars),
 					Action:      getAction(GetDebugVars),
 				},
+				{
+					Name:        "change_state",
+					Usage:       "change state of specified node",
+					UsageText:   "neofs-cli --host <host:port> --key <key:path|hex|wif> status change_state",
+					Description: "allows change state of specified node",
+					Flags:       getFlags(ChangeState),
+					Action:      getAction(ChangeState),
+				},
 			},
 		},
 	}
