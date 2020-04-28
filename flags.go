@@ -25,6 +25,7 @@ const (
 	sgFlag      = "sg"
 	verboseFlag = "verbose"
 	beautyFlag  = "beauty"
+	stateFlag   = "state"
 
 	ConfigFlag = "config"
 

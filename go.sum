@@ -127,8 +127,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/nspcc-dev/hrw v1.0.1/go.mod h1:2gbvQ0nRi9+er+djibFyMLMWC8Ilwe7Z9pYCU6OrkMM=
 github.com/nspcc-dev/hrw v1.0.8 h1:vwRuJXZXgkMvf473vFzeWGCfY1WBVeSHAEHvR4u3/Cg=
 github.com/nspcc-dev/hrw v1.0.8/go.mod h1:l/W2vx83vMQo6aStyx2AuZrJ+07lGv2JQGlVkPG06MU=
-github.com/nspcc-dev/neofs-api-go v0.7.0 h1:ghqbO4+s+zTyvXHWLSXgl7Ah61+ow6EHIJB928T6w6A=
-github.com/nspcc-dev/neofs-api-go v0.7.0/go.mod h1:fzV1gSigr5sEYWjs1jL395Cyv+6y/dMk2PeVPv+Vqlo=
+github.com/nspcc-dev/neofs-api-go v0.7.1 h1:Q26tsfJN9vLyAaJHPYr/ism8VOWRdMYPnIO9QeNrwKQ=
+github.com/nspcc-dev/neofs-api-go v0.7.1/go.mod h1:fzV1gSigr5sEYWjs1jL395Cyv+6y/dMk2PeVPv+Vqlo=
 github.com/nspcc-dev/neofs-crypto v0.3.0 h1:zlr3pgoxuzrmGCxc5W8dGVfA9Rro8diFvVnBg0L4ifM=
 github.com/nspcc-dev/neofs-crypto v0.3.0/go.mod h1:8w16GEJbH6791ktVqHN9YRNH3s9BEEKYxGhlFnp0cDw=
 github.com/nspcc-dev/netmap v1.2.0/go.mod h1:9vt5vDTHP0BdhUluQek4iFfMv+pCv5b1Kg7eM6WyQl8=

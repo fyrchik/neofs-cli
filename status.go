@@ -42,7 +42,48 @@ var (
 			&cli.BoolFlag{Name: "beauty"},
 		},
 	}
+
+	changeStateAction = &action{
+		Action: changeState,
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: stateFlag},
+		},
+	}
 )
+
+func changeState(c *cli.Context) error {
+	var (
+		err  error
+		host = getHost(c)
+		conn *grpc.ClientConn
+		req  = new(state.ChangeStateRequest)
+		ctx  = gracefulContext()
+	)
+
+	switch st := c.String(stateFlag); st {
+	case "online":
+		req.State = state.ChangeStateRequest_Online
+	case "offline":
+		req.State = state.ChangeStateRequest_Offline
+	default:
+		return errors.Errorf("unknown state: %q", st)
+	}
+
+	if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "could not connect to host %s", host)
+	}
+
+	req.SetTTL(service.NonForwardingTTL)
+	signRequest(c, req)
+
+	if _, err = state.NewStatusClient(conn).ChangeState(ctx, req); err != nil {
+		return errors.Wrap(err, "status command failed on remote call")
+	}
+
+	fmt.Println("DONE")
+
+	return nil
+}
 
 func getVars(c *cli.Context) error {
 	var (
