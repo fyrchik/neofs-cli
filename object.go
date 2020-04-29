@@ -258,7 +258,23 @@ func head(c *cli.Context) error {
 	if len(resp.Object.Headers) != 0 {
 		fmt.Println("Other headers:")
 		for i := range resp.Object.Headers {
-			fmt.Println("  " + resp.Object.Headers[i].String())
+			// todo replace all this with object.Stringify in future
+			switch hdr := resp.Object.Headers[i].Value.(type) {
+			case *object.Header_HomoHash:
+				fmt.Printf("  homohash = %s\n", hdr.HomoHash.String())
+			case *object.Header_PublicKey:
+				fmt.Printf("  pubkey = %02x\n", hdr.PublicKey.Value)
+			case *object.Header_PayloadChecksum:
+				fmt.Printf("  payload_checksum = %02x\n", hdr.PayloadChecksum)
+			case *object.Header_Integrity:
+				fmt.Printf("  integrity = %s\n", hdr.Integrity.String())
+			case *object.Header_Verify:
+				fmt.Printf("  pubkey = %02x, signature = %02x\n", hdr.Verify.PublicKey, hdr.Verify.KeySignature)
+			case *object.Header_UserHeader:
+				fmt.Printf("  %s = %s\n", hdr.UserHeader.Key, hdr.UserHeader.Value)
+			default:
+				fmt.Printf("  %#v\n", resp.Object.Headers[i])
+			}
 		}
 	}
 
