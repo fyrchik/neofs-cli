@@ -165,19 +165,38 @@ $ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key object head \
 --oid e35f3596-2cde-4d3e-b57a-752ed687b79a \
 --full-headers
 
-System headers:
-  Object ID   : e35f3596-2cde-4d3e-b57a-752ed687b79a
-  Owner ID    : AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y
-  Container ID: 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG
-  Payload Size: 3.1M
-  Version     : 1
-  Created at  : epoch #13, 2019-11-07 17:42:57 +0300 MSK
-Other headers:
-  UserHeader:<Key:"Nicename" Value:"cat_picture.png" > 
-  Verify:<PublicKey:"\002{...}" >
-  HomoHash:... 
-  PayloadChecksum:"..."
-  Integrity:<HeadersChecksum:"..." ChecksumSignature:"..." >
+Object:
+	SystemHeader:
+		- ID=7e0b9c6c-aabc-4985-949e-2680e577b48b
+		- CID=11111111111111111111111111111111
+		- OwnerID=ALYeYC41emF6MrmUMc4a8obEPdgFhq9ran
+		- Version=1
+		- PayloadLength=1
+		- CreatedAt={UnixTime=1 Epoch=1}
+	ExtendedHeaders:
+		- Type=Link
+		  Value={Type=Child ID=7e0b9c6c-aabc-4985-949e-2680e577b48b}
+		- Type=Redirect
+		  Value={CID=11111111111111111111111111111111 OID=7e0b9c6c-aabc-4985-949e-2680e577b48b}
+		- Type=UserHeader
+		  Value={Key=test_key Val=test_value}
+		- Type=Transform
+		  Value=Split
+		- Type=Tombstone
+		  Value=MARKED
+		- Type=Verify
+		  Value={PublicKey=010203040506 Signature=010203040506}
+		- Type=HomoHash
+		  Value=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+		- Type=PayloadChecksum
+		  Value=010203040506
+		- Type=Integrity
+		  Value={Checksum=010203040506 Signature=010203040506}
+		- Type=StorageGroup
+		  Value={DataSize=5 Hash=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 Lifetime={Unit=UnixTime Value=555}}
+		- Type=PublicKey
+		  Value=010203040506
+	Payload: []byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7}
 ```
 
 You can also search by well known or user defined headers
@@ -224,21 +243,47 @@ $ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key sg get \
 --cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
 --sgid a220d19f-78ca-4574-ac1b-d7b246e929b5
 
-System headers:
-  Object ID   : a220d19f-78ca-4574-ac1b-d7b246e929b5
-  Owner ID    : AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y
-  Container ID: 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG
-  Payload Size: 0B
-  Version     : 1
-  Created at  : epoch #16, 2019-11-07 17:59:57 +0300 MSK
-Other headers:
-  Link:<type:StorageGroup ID:e35f3596-2cde-4d3e-b57a-752ed687b79a > 
-  Link:<type:StorageGroup ID:79ecc573-92c9-4066-8546-96e16e980700 > 
-  StorageGroup:<ValidationDataSize:6500758 ValidationHash:... > 
-  Verify: ...
-  HomoHash: ... 
-  PayloadChecksum: ...
-  Integrity: ...
+Object:
+	SystemHeader:
+		- ID=7e0b9c6c-aabc-4985-949e-2680e577b48b
+		- CID=11111111111111111111111111111111
+		- OwnerID=ALYeYC41emF6MrmUMc4a8obEPdgFhq9ran
+		- Version=1
+		- PayloadLength=1
+		- CreatedAt={UnixTime=1 Epoch=1}
+	ExtendedHeaders:
+		- Type=Link
+		  Value={Type=Child ID=7e0b9c6c-aabc-4985-949e-2680e577b48b}
+		- Type=Redirect
+		  Value={CID=11111111111111111111111111111111 OID=7e0b9c6c-aabc-4985-949e-2680e577b48b}
+		- Type=UserHeader
+		  Value={Key=test_key Val=test_value}
+		- Type=Transform
+		  Value=Split
+		- Type=Tombstone
+		  Value=MARKED
+		- Type=Verify
+		  Value={PublicKey=010203040506 Signature=010203040506}
+		- Type=HomoHash
+		  Value=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+		- Type=PayloadChecksum
+		  Value=010203040506
+		- Type=Integrity
+		  Value={Checksum=010203040506 Signature=010203040506}
+		- Type=StorageGroup
+		  Value={DataSize=5 Hash=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 Lifetime={Unit=UnixTime Value=555}}
+		- Type=PublicKey
+		  Value=010203040506
+	Payload: []byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7}
+```
+
+In the same way you can remove StorageGroup:
+
+```
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key ./key sg delete \
+--cid 7Gi7c1WmyKxEW3JwqEETupNoQ7rAb1CSQYxdPirXLwaG \
+--sgid a220d19f-78ca-4574-ac1b-d7b246e929b5
+
 ```
 
 ### Status operations
@@ -340,6 +385,18 @@ $ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status dump_vars --beauty
 {
   // ...
 }
+```
+
+#### Change state of specified node:
+
+```
+// --state can be `online` or `offline`
+
+$ ./bin/neofs-cli --host fs.nspcc.ru:8080 --key /key status change_state --state offline
+
+DONE
+
+  
 ```
 
 ## License

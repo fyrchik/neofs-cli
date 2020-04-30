@@ -71,7 +71,7 @@ func listSG(c *cli.Context) error {
 
 func getSG(c *cli.Context) error {
 	if err := c.Set(objFlag, c.String(sgidFlag)); err != nil {
-		return errors.Wrap(err, "HERE!!!")
+		return err
 	} else if err := c.Set(fullHeadersFlag, "true"); err != nil {
 		return err
 	}
