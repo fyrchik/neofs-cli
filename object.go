@@ -253,11 +253,6 @@ func head(c *cli.Context) error {
 
 // objectStringify converts object into string format.
 func objectStringify(dst io.Writer, obj *object.Object) error {
-	// put empty line
-	if _, err := fmt.Fprintln(dst); err != nil {
-		return err
-	}
-
 	// put object line
 	if _, err := fmt.Fprintln(dst, "Object:"); err != nil {
 		return err
@@ -293,7 +288,7 @@ func objectStringify(dst io.Writer, obj *object.Object) error {
 	}
 
 	// put user headers
-	if _, err := fmt.Fprintln(dst, "\tUserHeaders:"); err != nil {
+	if _, err := fmt.Fprintln(dst, "\tExtendedHeaders:"); err != nil {
 		return err
 	}
 
@@ -342,7 +337,7 @@ func objectStringify(dst io.Writer, obj *object.Object) error {
 					buf.WriteString(" Lifetime={")
 					buf.WriteString("Unit=" + lt.Unit.String())
 					buf.WriteString(" Value=" + strconv.FormatInt(lt.Value, 10))
-					buf.WriteString(" }")
+					buf.WriteByte('}')
 				}
 				buf.WriteByte('}')
 				val = buf.String()
