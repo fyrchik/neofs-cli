@@ -18,7 +18,13 @@ var (
 
 	getSGAction = &action{
 		Action: getSG,
-		Flags:  append(headObjectAction.Flags, storagegroupID),
+		Flags: []cli.Flag{
+			containerID,
+			rawQuery,
+			storagegroupID,
+			oidHidden,
+			fullHeadersHidden,
+		},
 	}
 
 	listSGAction = &action{
@@ -28,7 +34,13 @@ var (
 
 	delSGAction = &action{
 		Action: delSG,
-		Flags:  append(delObjectAction.Flags, storagegroupID),
+		Flags: []cli.Flag{
+			containerID,
+			rawQuery,
+			storagegroupID,
+			oidHidden,
+			fullHeadersHidden,
+		},
 	}
 
 	putSGAction = &action{
@@ -37,6 +49,16 @@ var (
 			containerID,
 			objectIDs,
 		},
+	}
+
+	oidHidden = &cli.StringFlag{
+		Name:   objFlag,
+		Hidden: true,
+	}
+
+	fullHeadersHidden = &cli.StringFlag{
+		Name:   fullHeadersFlag,
+		Hidden: true,
 	}
 )
 

@@ -8,9 +8,9 @@ import (
 	"io"
 	"math"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/nspcc-dev/neofs-api-go/hash"
 	"github.com/nspcc-dev/neofs-api-go/object"
@@ -248,17 +248,122 @@ func head(c *cli.Context) error {
 		return errors.Wrap(err, "can't perform HEAD request")
 	}
 
-	fmt.Println("System headers:")
-	fmt.Printf("  Object ID   : %s\n", resp.Object.SystemHeader.ID)
-	fmt.Printf("  Owner ID    : %s\n", resp.Object.SystemHeader.OwnerID)
-	fmt.Printf("  Container ID: %s\n", resp.Object.SystemHeader.CID)
-	fmt.Printf("  Payload Size: %s\n", object.ByteSize(resp.Object.SystemHeader.PayloadLength))
-	fmt.Printf("  Version     : %d\n", resp.Object.SystemHeader.Version)
-	fmt.Printf("  Created at  : epoch #%d, %s\n", resp.Object.SystemHeader.CreatedAt.Epoch, time.Unix(resp.Object.SystemHeader.CreatedAt.UnixTime, 0))
-	if len(resp.Object.Headers) != 0 {
-		fmt.Println("Other headers:")
-		for i := range resp.Object.Headers {
-			fmt.Println("  " + resp.Object.Headers[i].String())
+	return objectStringify(os.Stdout, resp.Object)
+}
+
+// objectStringify converts object into string format.
+func objectStringify(dst io.Writer, obj *object.Object) error {
+	// put object line
+	if _, err := fmt.Fprintln(dst, "Object:"); err != nil {
+		return err
+	}
+
+	// put system headers
+	if _, err := fmt.Fprintln(dst, "\tSystemHeader:"); err != nil {
+		return err
+	}
+
+	sysHeaders := []string{"ID", "CID", "OwnerID", "Version", "PayloadLength", "CreatedAt"}
+	v := reflect.ValueOf(obj.SystemHeader)
+	for _, key := range sysHeaders {
+		var val interface{}
+
+		switch key {
+		case "CreatedAt":
+			val = fmt.Sprintf(`{UnixTime=%d Epoch=%d}`,
+				obj.SystemHeader.CreatedAt.UnixTime,
+				obj.SystemHeader.CreatedAt.Epoch)
+		default:
+			if !v.FieldByName(key).IsValid() {
+				return errors.Errorf("invalid system header key: %q", key)
+			}
+
+			val = v.FieldByName(key).Interface()
+
+		}
+
+		if _, err := fmt.Fprintf(dst, "\t\t- %s=%v\n", key, val); err != nil {
+			return err
+		}
+	}
+
+	// put user headers
+	if _, err := fmt.Fprintln(dst, "\tExtendedHeaders:"); err != nil {
+		return err
+	}
+
+	for _, header := range obj.Headers {
+		var (
+			typ = reflect.ValueOf(header.Value)
+			key string
+			val interface{}
+		)
+
+		switch t := typ.Interface().(type) {
+		case *object.Header_Link:
+			key = "Link"
+			val = fmt.Sprintf(`{Type=%s ID=%s}`, t.Link.Type, t.Link.ID)
+		case *object.Header_Redirect:
+			key = "Redirect"
+			val = fmt.Sprintf(`{CID=%s OID=%s}`, t.Redirect.CID, t.Redirect.ObjectID)
+		case *object.Header_UserHeader:
+			key = "UserHeader"
+			val = fmt.Sprintf(`{Key=%s Val=%s}`, t.UserHeader.Key, t.UserHeader.Value)
+		case *object.Header_Transform:
+			key = "Transform"
+			val = t.Transform.Type.String()
+		case *object.Header_Tombstone:
+			key = "Tombstone"
+			val = "MARKED"
+		case *object.Header_HomoHash:
+			key = "HomoHash"
+			val = hex.EncodeToString(t.HomoHash[:])
+		case *object.Header_PayloadChecksum:
+			key = "PayloadChecksum"
+			val = hex.EncodeToString(t.PayloadChecksum)
+		case *object.Header_Integrity:
+			key = "Integrity"
+			val = fmt.Sprintf(`{Checksum=%02x Signature=%02x}`,
+				t.Integrity.HeadersChecksum,
+				t.Integrity.ChecksumSignature)
+		case *object.Header_StorageGroup:
+			key = "StorageGroup"
+			buf := new(strings.Builder)
+			if sg := t.StorageGroup; sg != nil {
+				buf.WriteByte('{')
+				buf.WriteString("DataSize=" + strconv.FormatUint(sg.ValidationDataSize, 10))
+				buf.WriteString(" Hash=" + hex.EncodeToString(sg.ValidationHash[:]))
+				if lt := sg.Lifetime; lt != nil {
+					buf.WriteString(" Lifetime={")
+					buf.WriteString("Unit=" + lt.Unit.String())
+					buf.WriteString(" Value=" + strconv.FormatInt(lt.Value, 10))
+					buf.WriteByte('}')
+				}
+				buf.WriteByte('}')
+				val = buf.String()
+			}
+		case *object.Header_Verify:
+			key = "Verify"
+			val = fmt.Sprintf("{PublicKey=%02x Signature=%02x}",
+				t.Verify.PublicKey,
+				t.Verify.KeySignature)
+		case *object.Header_PublicKey:
+			key = "PublicKey"
+			val = hex.EncodeToString(t.PublicKey.Value)
+		default:
+			key = fmt.Sprintf("Unknown(%T)", t)
+			val = t
+		}
+
+		if _, err := fmt.Fprintf(dst, "\t\t- Type=%s\n\t\t  Value=%v\n", key, val); err != nil {
+			return err
+		}
+	}
+
+	// put payload
+	if len(obj.Payload) > 0 {
+		if _, err := fmt.Fprintf(dst, "\tPayload: %#v\n", obj.Payload); err != nil {
+			return err
 		}
 	}
 
