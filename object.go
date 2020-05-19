@@ -342,11 +342,11 @@ func objectStringify(dst io.Writer, obj *object.Object) error {
 				buf.WriteByte('}')
 				val = buf.String()
 			}
-		case *object.Header_Verify:
-			key = "Verify"
-			val = fmt.Sprintf("{PublicKey=%02x Signature=%02x}",
-				t.Verify.PublicKey,
-				t.Verify.KeySignature)
+		case *object.Header_Token:
+			key = "Token"
+			val = fmt.Sprintf("{ID=%s Verb=%s}",
+				t.Token.GetID(),
+				t.Token.GetVerb())
 		case *object.Header_PublicKey:
 			key = "PublicKey"
 			val = hex.EncodeToString(t.PublicKey.Value)
