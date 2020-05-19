@@ -184,3 +184,9 @@ func setTTL(c *cli.Context, req service.TTLContainer) {
 	ttl := c.Uint(ttlFlag)
 	req.SetTTL(uint32(ttl))
 }
+
+func setRaw(c *cli.Context, req service.RawContainer) {
+	req.SetRaw(
+		c.Bool(rawFlag),
+	)
+}

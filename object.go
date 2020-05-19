@@ -97,7 +97,6 @@ var (
 			objectID,
 			filePath,
 			permissions,
-			rawQuery,
 		},
 	}
 	delObjectAction = &action{
@@ -113,7 +112,6 @@ var (
 			containerID,
 			objectID,
 			fullHeaders,
-			rawQuery,
 		},
 	}
 	searchObjectAction = &action{
@@ -214,6 +212,7 @@ func del(c *cli.Context) error {
 	}
 	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	_, err = object.NewServiceClient(conn).Delete(ctx, req)
@@ -236,7 +235,6 @@ func head(c *cli.Context) error {
 		objArg = c.String(objFlag)
 		fh     = c.Bool(fullHeadersFlag)
 		ctx    = gracefulContext()
-		raw    = c.Bool(rawFlag)
 	)
 
 	if cidArg == "" || objArg == "" {
@@ -280,8 +278,8 @@ func head(c *cli.Context) error {
 		FullHeaders: fh,
 	}
 	req.SetToken(token)
-	req.SetRaw(raw)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := object.NewServiceClient(conn).Head(ctx, req)
@@ -490,6 +488,7 @@ func search(c *cli.Context) error {
 	}
 	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	searchClient, err := object.NewServiceClient(conn).Search(ctx, req)
@@ -582,6 +581,7 @@ func getRange(c *cli.Context) error {
 	}
 	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	rangeClient, err := object.NewServiceClient(conn).GetRange(ctx, req)
@@ -677,6 +677,7 @@ func getRangeHash(c *cli.Context) error {
 	}
 	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := object.NewServiceClient(conn).GetRangeHash(ctx, req)
@@ -843,6 +844,7 @@ func put(c *cli.Context) error {
 		}
 		req.SetToken(token)
 		setTTL(c, req)
+		setRaw(c, req)
 		signRequest(c, req)
 
 		if err = putClient.Send(req); err != nil {
@@ -863,6 +865,7 @@ func put(c *cli.Context) error {
 
 				req := object.MakePutRequestChunk(data[:n])
 				setTTL(c, req)
+				setRaw(c, req)
 				signRequest(c, req)
 
 				if err := putClient.Send(req); err != nil && err != io.EOF {
@@ -904,6 +907,7 @@ func put(c *cli.Context) error {
 			}
 			req.SetToken(token)
 			setTTL(c, req)
+			setRaw(c, req)
 			signRequest(c, req)
 
 			if r, err := client.GetRangeHash(ctx, req); err != nil {
@@ -1001,7 +1005,6 @@ func get(c *cli.Context) error {
 		sOID  = c.String(objFlag)
 		fPath = c.String(fileFlag)
 		perm  = c.Int(permFlag)
-		raw   = c.Bool(rawFlag)
 		ctx   = gracefulContext()
 	)
 
@@ -1045,8 +1048,8 @@ func get(c *cli.Context) error {
 		Address: addr,
 	}
 	req.SetToken(token)
-	req.SetRaw(raw)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	getClient, err := object.NewServiceClient(conn).Get(ctx, req)

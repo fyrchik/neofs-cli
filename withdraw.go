@@ -84,6 +84,7 @@ func putWithdraw(c *cli.Context) error {
 		MessageID: msgID,
 	}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := accounting.NewWithdrawClient(conn).Put(ctx, req)
@@ -124,6 +125,7 @@ func getWithdraw(c *cli.Context) error {
 		OwnerID: owner,
 	}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 	resp, err := accounting.NewWithdrawClient(conn).Get(ctx, req)
 	if err != nil {
@@ -221,6 +223,7 @@ func delWithdraw(c *cli.Context) error {
 		MessageID: msgID,
 	}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	_, err = accounting.NewWithdrawClient(conn).Delete(ctx, req)
@@ -248,6 +251,7 @@ func listWithdraw(c *cli.Context) error {
 
 	req := &accounting.ListRequest{OwnerID: owner}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := accounting.NewWithdrawClient(conn).List(ctx, req)

@@ -55,6 +55,7 @@ GLOBAL OPTIONS:
    --verbose       verbose gRPC connection (default: false)
    --help, -h      show help (default: false)
    --version, -v   print the version (default: false)
+   --raw value     use raw request (default: false)
 
 ```
 ### Configuration

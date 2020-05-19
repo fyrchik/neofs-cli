@@ -19,7 +19,6 @@ var (
 		Action: getSG,
 		Flags: []cli.Flag{
 			containerID,
-			rawQuery,
 			storagegroupID,
 			oidHidden,
 			fullHeadersHidden,
@@ -35,7 +34,6 @@ var (
 		Action: delSG,
 		Flags: []cli.Flag{
 			containerID,
-			rawQuery,
 			storagegroupID,
 			oidHidden,
 			fullHeadersHidden,
@@ -176,6 +174,7 @@ func putSG(c *cli.Context) error {
 	req := object.MakePutRequestHeader(sg)
 	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	if err = putClient.Send(req); err != nil {

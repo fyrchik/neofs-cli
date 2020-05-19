@@ -41,6 +41,7 @@ func getBalance(c *cli.Context) error {
 
 	req := &accounting.BalanceRequest{OwnerID: owner}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := accounting.NewAccountingClient(conn).Balance(ctx, req)
