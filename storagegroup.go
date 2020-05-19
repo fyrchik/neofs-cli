@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/nspcc-dev/neofs-api-go/object"
 	"github.com/nspcc-dev/neofs-api-go/refs"
-	"github.com/nspcc-dev/neofs-api-go/session"
+	"github.com/nspcc-dev/neofs-api-go/service"
 	"github.com/nspcc-dev/neofs-api-go/storagegroup"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
@@ -20,7 +19,6 @@ var (
 		Action: getSG,
 		Flags: []cli.Flag{
 			containerID,
-			rawQuery,
 			storagegroupID,
 			oidHidden,
 			fullHeadersHidden,
@@ -36,7 +34,6 @@ var (
 		Action: delSG,
 		Flags: []cli.Flag{
 			containerID,
-			rawQuery,
 			storagegroupID,
 			oidHidden,
 			fullHeadersHidden,
@@ -150,18 +147,22 @@ func putSG(c *cli.Context) error {
 
 	sg.SystemHeader.ID = objID
 
-	token, err := establishSession(ctx, sessionParams{
-		cmd:  c,
-		key:  key,
-		conn: conn,
-		token: &session.Token{
-			// FirstEpoch: 0,
-			ObjectID:  []refs.ObjectID{objID},
-			LastEpoch: math.MaxUint64,
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
 		},
+
+		addr: refs.Address{
+			ObjectID: objID,
+			CID:      cid,
+		},
+
+		verb: service.Token_Info_Put,
 	})
 	if err != nil {
-		return errors.Wrap(err, "can't establish session")
+		return errors.Wrap(err, "could not create session token")
 	}
 
 	client := object.NewServiceClient(conn)
@@ -170,8 +171,10 @@ func putSG(c *cli.Context) error {
 		return errors.Wrap(err, "put command failed on client creation")
 	}
 
-	req := object.MakePutRequestHeader(sg, token)
+	req := object.MakePutRequestHeader(sg)
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	if err = putClient.Send(req); err != nil {

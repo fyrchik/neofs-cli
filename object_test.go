@@ -6,6 +6,7 @@ import (
 
 	"github.com/nspcc-dev/neofs-api-go/object"
 	"github.com/nspcc-dev/neofs-api-go/refs"
+	"github.com/nspcc-dev/neofs-api-go/service"
 	"github.com/nspcc-dev/neofs-api-go/storagegroup"
 	"github.com/nspcc-dev/neofs-crypto/test"
 	"github.com/stretchr/testify/require"
@@ -31,8 +32,8 @@ func TestStringify(t *testing.T) {
 		  Value=Split
 		- Type=Tombstone
 		  Value=MARKED
-		- Type=Verify
-		  Value={PublicKey=010203040506 Signature=010203040506}
+		- Type=Token
+		  Value={ID=01020304-0506-0000-0000-000000000000 Verb=Put}
 		- Type=HomoHash
 		  Value=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 		- Type=PayloadChecksum
@@ -110,13 +111,14 @@ func TestStringify(t *testing.T) {
 		},
 	})
 
-	// *Header_Verify
+	// *Header_Token
+	token := new(service.Token)
+	token.SetID(service.TokenID{1, 2, 3, 4, 5, 6})
+	token.SetVerb(service.Token_Info_Put)
+
 	obj.Headers = append(obj.Headers, object.Header{
-		Value: &object.Header_Verify{
-			Verify: &object.VerificationHeader{
-				PublicKey:    []byte{1, 2, 3, 4, 5, 6},
-				KeySignature: []byte{1, 2, 3, 4, 5, 6},
-			},
+		Value: &object.Header_Token{
+			Token: token,
 		},
 	})
 

@@ -74,6 +74,7 @@ func changeState(c *cli.Context) error {
 	}
 
 	req.SetTTL(service.NonForwardingTTL)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	if _, err = state.NewStatusClient(conn).ChangeState(ctx, req); err != nil {
@@ -99,6 +100,7 @@ func getVars(c *cli.Context) error {
 	}
 
 	req.SetTTL(service.NonForwardingTTL)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	res, err := state.NewStatusClient(conn).DumpVars(ctx, req)
@@ -135,6 +137,7 @@ func getConfig(c *cli.Context) error {
 	}
 
 	req.SetTTL(service.NonForwardingTTL)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	res, err := state.NewStatusClient(conn).DumpConfig(ctx, req)
@@ -161,6 +164,7 @@ func getMetrics(c *cli.Context) error {
 	}
 
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	res, err := state.NewStatusClient(conn).Metrics(ctx, req)
@@ -199,6 +203,7 @@ func getHealthy(c *cli.Context) error {
 	}
 
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	res, err := state.NewStatusClient(conn).HealthCheck(ctx, req)
@@ -225,6 +230,7 @@ func getEpoch(c *cli.Context) error {
 	}
 
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	nm, err := state.NewStatusClient(conn).Netmap(ctx, req)
@@ -250,6 +256,7 @@ func getNetmap(c *cli.Context) error {
 	}
 
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	nm, err := state.NewStatusClient(conn).Netmap(ctx, req)

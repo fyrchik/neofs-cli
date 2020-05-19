@@ -57,7 +57,7 @@ type action struct {
 
 var actions = map[actionName]*action{
 	Global: {
-		Flags: []cli.Flag{ttlF, cfgF, keyFile, hostAddr, verbose},
+		Flags: []cli.Flag{ttlF, rawQuery, cfgF, keyFile, hostAddr, verbose},
 	},
 
 	// container commands

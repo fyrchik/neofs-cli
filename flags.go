@@ -134,9 +134,9 @@ var (
 	}
 )
 
-func signRequest(c *cli.Context, req service.VerifiableRequest) {
+func signRequest(c *cli.Context, req service.DataWithTokenSignAccumulator) {
 	key := getKey(c)
-	if err := service.SignRequestHeader(key, req); err != nil {
+	if err := service.SignDataWithSessionToken(key, req); err != nil {
 		fmt.Printf("%T could not sign request\n", req)
 		fmt.Println(err.Error())
 		os.Exit(2)
@@ -180,7 +180,13 @@ func getKey(c *cli.Context) *ecdsa.PrivateKey {
 	return key
 }
 
-func setTTL(c *cli.Context, req service.MetaHeader) {
+func setTTL(c *cli.Context, req service.TTLContainer) {
 	ttl := c.Uint(ttlFlag)
 	req.SetTTL(uint32(ttl))
+}
+
+func setRaw(c *cli.Context, req service.RawContainer) {
+	req.SetRaw(
+		c.Bool(rawFlag),
+	)
 }

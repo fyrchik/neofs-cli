@@ -127,6 +127,7 @@ func putContainer(c *cli.Context) error {
 	}
 
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := container.NewServiceClient(conn).Put(ctx, req)
@@ -157,6 +158,7 @@ loop:
 
 			req := &container.ListRequest{OwnerID: owner}
 			setTTL(c, req)
+			setRaw(c, req)
 			signRequest(c, req)
 
 			resp, err := client.List(ctx, req)
@@ -180,6 +182,7 @@ loop:
 func fetchContainer(ctx context.Context, con *grpc.ClientConn, cid refs.CID, cli *cli.Context) (*container.GetResponse, error) {
 	req := &container.GetRequest{CID: cid}
 	setTTL(cli, req)
+	setRaw(cli, req)
 	signRequest(cli, req)
 	return container.NewServiceClient(con).Get(ctx, req)
 }
@@ -244,6 +247,7 @@ func delContainer(c *cli.Context) error {
 
 	req := &container.DeleteRequest{CID: cid}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	_, err = container.NewServiceClient(conn).Delete(ctx, req)
@@ -271,6 +275,7 @@ func listContainers(c *cli.Context) error {
 
 	req := &container.ListRequest{OwnerID: owner}
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := container.NewServiceClient(conn).List(ctx, req)

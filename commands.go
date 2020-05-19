@@ -43,7 +43,7 @@ func commands() cli.Commands {
 				{
 					Name:        "get",
 					Usage:       "get object from container",
-					UsageText:   "get --cid <cid> --oid <oid> --file ./my-file [--perm <permissions>] [--raw]",
+					UsageText:   "get --cid <cid> --oid <oid> --file ./my-file [--perm <permissions>]",
 					Description: "get file from network",
 					Flags:       getFlags(GetObject),
 					Action:      getAction(GetObject),
@@ -59,7 +59,7 @@ func commands() cli.Commands {
 				{
 					Name:        "head",
 					Usage:       "get object header from container",
-					UsageText:   "head --cid <cid> --oid <oid> [--full-headers] [--raw]",
+					UsageText:   "head --cid <cid> --oid <oid> [--full-headers]",
 					Description: "retrieve object metadata",
 					Flags:       getFlags(HeadObject),
 					Action:      getAction(HeadObject),

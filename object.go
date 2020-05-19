@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -16,6 +15,7 @@ import (
 	"github.com/nspcc-dev/neofs-api-go/object"
 	"github.com/nspcc-dev/neofs-api-go/query"
 	"github.com/nspcc-dev/neofs-api-go/refs"
+	"github.com/nspcc-dev/neofs-api-go/service"
 	"github.com/nspcc-dev/neofs-api-go/session"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
@@ -28,11 +28,31 @@ type (
 		GRPCStatus() *status.Status
 	}
 
+	connectionParams struct {
+		ctx context.Context
+
+		cmd *cli.Context
+
+		conn *grpc.ClientConn
+	}
+
 	sessionParams struct {
-		cmd   *cli.Context
-		token *session.Token
-		conn  *grpc.ClientConn
-		key   *ecdsa.PrivateKey
+		connectionParams
+
+		prm session.CreateParamsSource
+
+		res interface {
+			service.TokenIDContainer
+			service.SessionKeyContainer
+		}
+	}
+
+	tokenParams struct {
+		connectionParams
+
+		addr refs.Address
+
+		verb service.Token_Info_Verb
 	}
 )
 
@@ -77,7 +97,6 @@ var (
 			objectID,
 			filePath,
 			permissions,
-			rawQuery,
 		},
 	}
 	delObjectAction = &action{
@@ -93,7 +112,6 @@ var (
 			containerID,
 			objectID,
 			fullHeaders,
-			rawQuery,
 		},
 	}
 	searchObjectAction = &action{
@@ -163,18 +181,24 @@ func del(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse object id '%s'", objArg)
 	}
 
-	token, err := establishSession(ctx, sessionParams{
-		cmd:  c,
-		key:  key,
-		conn: conn,
-		token: &session.Token{
-			// FirstEpoch: 0,
-			ObjectID:  []refs.ObjectID{objID},
-			LastEpoch: math.MaxUint64,
+	addr := refs.Address{
+		ObjectID: objID,
+		CID:      cid,
+	}
+
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
 		},
+
+		addr: addr,
+
+		verb: service.Token_Info_Delete,
 	})
 	if err != nil {
-		return errors.Wrap(err, "can't establish session")
+		return errors.Wrap(err, "could not create session token")
 	}
 
 	owner, err := refs.NewOwnerID(&key.PublicKey)
@@ -183,14 +207,12 @@ func del(c *cli.Context) error {
 	}
 
 	req := &object.DeleteRequest{
-		Address: refs.Address{
-			CID:      cid,
-			ObjectID: objID,
-		},
+		Address: addr,
 		OwnerID: owner,
-		Token:   token,
 	}
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	_, err = object.NewServiceClient(conn).Delete(ctx, req)
@@ -213,7 +235,6 @@ func head(c *cli.Context) error {
 		objArg = c.String(objFlag)
 		fh     = c.Bool(fullHeadersFlag)
 		ctx    = gracefulContext()
-		raw    = c.Bool(rawFlag)
 	)
 
 	if cidArg == "" || objArg == "" {
@@ -232,15 +253,33 @@ func head(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse object id '%s'", objArg)
 	}
 
-	req := &object.HeadRequest{
-		Address: refs.Address{
-			CID:      cid,
-			ObjectID: objID,
-		},
-		FullHeaders: fh,
-		Raw:         raw,
+	addr := refs.Address{
+		ObjectID: objID,
+		CID:      cid,
 	}
+
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
+		},
+
+		addr: addr,
+
+		verb: service.Token_Info_Head,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not create session token")
+	}
+
+	req := &object.HeadRequest{
+		Address:     addr,
+		FullHeaders: fh,
+	}
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := object.NewServiceClient(conn).Head(ctx, req)
@@ -342,11 +381,11 @@ func objectStringify(dst io.Writer, obj *object.Object) error {
 				buf.WriteByte('}')
 				val = buf.String()
 			}
-		case *object.Header_Verify:
-			key = "Verify"
-			val = fmt.Sprintf("{PublicKey=%02x Signature=%02x}",
-				t.Verify.PublicKey,
-				t.Verify.KeySignature)
+		case *object.Header_Token:
+			key = "Token"
+			val = fmt.Sprintf("{ID=%s Verb=%s}",
+				t.Token.GetID(),
+				t.Token.GetVerb())
 		case *object.Header_PublicKey:
 			key = "PublicKey"
 			val = hex.EncodeToString(t.PublicKey.Value)
@@ -425,12 +464,31 @@ func search(c *cli.Context) error {
 		return errors.Wrap(err, "can't marshal query")
 	}
 
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
+		},
+
+		addr: refs.Address{
+			CID: cid,
+		},
+
+		verb: service.Token_Info_Search,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not create session token")
+	}
+
 	req := &object.SearchRequest{
 		ContainerID:  cid,
 		Query:        data,
 		QueryVersion: 1,
 	}
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	searchClient, err := object.NewServiceClient(conn).Search(ctx, req)
@@ -497,14 +555,33 @@ func getRange(c *cli.Context) error {
 		return errors.New("specify one range")
 	}
 
-	req := &object.GetRangeRequest{
-		Address: refs.Address{
-			ObjectID: objID,
-			CID:      cid,
-		},
-		Range: ranges[0],
+	addr := refs.Address{
+		ObjectID: objID,
+		CID:      cid,
 	}
+
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
+		},
+
+		addr: addr,
+
+		verb: service.Token_Info_Range,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not create session token")
+	}
+
+	req := &object.GetRangeRequest{
+		Address: addr,
+		Range:   ranges[0],
+	}
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	rangeClient, err := object.NewServiceClient(conn).GetRange(ctx, req)
@@ -573,15 +650,34 @@ func getRangeHash(c *cli.Context) error {
 		return errors.Wrap(err, "can't parse ranges")
 	}
 
-	req := &object.GetRangeHashRequest{
-		Address: refs.Address{
-			ObjectID: objID,
-			CID:      cid,
-		},
-		Ranges: ranges,
-		Salt:   salt,
+	addr := refs.Address{
+		ObjectID: objID,
+		CID:      cid,
 	}
+
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
+		},
+
+		addr: addr,
+
+		verb: service.Token_Info_RangeHash,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not create session token")
+	}
+
+	req := &object.GetRangeHashRequest{
+		Address: addr,
+		Ranges:  ranges,
+		Salt:    salt,
+	}
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	resp, err := object.NewServiceClient(conn).GetRangeHash(ctx, req)
@@ -697,21 +793,22 @@ func put(c *cli.Context) error {
 			return errors.Wrap(err, "can't generate new object ID")
 		}
 
-		token, err := establishSession(ctx, sessionParams{
-			cmd:  c,
-			key:  key,
-			conn: conn,
-			token: &session.Token{
-				ObjectID:   []refs.ObjectID{objID},
-				FirstEpoch: 0,
-				LastEpoch:  math.MaxUint64,
+		token, err := createToken(tokenParams{
+			connectionParams: connectionParams{
+				ctx:  ctx,
+				cmd:  c,
+				conn: conn,
 			},
+
+			addr: refs.Address{
+				ObjectID: objID,
+				CID:      cid,
+			},
+
+			verb: service.Token_Info_Put,
 		})
-		if st, ok := err.(grpcState); ok {
-			state := st.GRPCStatus()
-			return errors.Errorf("%s (%s): %s", host, state.Code(), state.Message())
-		} else if err != nil {
-			return errors.Wrap(err, "can't establish session")
+		if err != nil {
+			return errors.Wrap(err, "could not create session token")
 		}
 
 		client := object.NewServiceClient(conn)
@@ -741,12 +838,13 @@ func put(c *cli.Context) error {
 			R: &object.PutRequest_Header{
 				Header: &object.PutRequest_PutHeader{
 					Object:       obj,
-					Token:        token,
 					CopiesNumber: uint32(cpNum),
 				},
 			},
 		}
+		req.SetToken(token)
 		setTTL(c, req)
+		setRaw(c, req)
 		signRequest(c, req)
 
 		if err = putClient.Send(req); err != nil {
@@ -767,6 +865,7 @@ func put(c *cli.Context) error {
 
 				req := object.MakePutRequestChunk(data[:n])
 				setTTL(c, req)
+				setRaw(c, req)
 				signRequest(c, req)
 
 				if err := putClient.Send(req); err != nil && err != io.EOF {
@@ -780,19 +879,35 @@ func put(c *cli.Context) error {
 			return errors.Wrap(err, "put command failed on CloseAndRecv")
 		}
 
+		addr := resp.GetAddress()
+
 		fmt.Printf("[%s] Object successfully stored\n", fPath)
-		fmt.Printf("  ID: %s\n  CID: %s\n", resp.Address.ObjectID, resp.Address.CID)
+		fmt.Printf("  ID: %s\n  CID: %s\n", addr.ObjectID, addr.CID)
 		if verify {
 			result := "success"
-			req := &object.GetRangeHashRequest{
-				Address: refs.Address{
-					ObjectID: resp.Address.ObjectID,
-					CID:      resp.Address.CID,
+
+			token, err := createToken(tokenParams{
+				connectionParams: connectionParams{
+					ctx:  ctx,
+					cmd:  c,
+					conn: conn,
 				},
-				Ranges: []object.Range{{Offset: 0, Length: obj.SystemHeader.PayloadLength}},
+
+				addr: addr,
+
+				verb: service.Token_Info_RangeHash,
+			})
+			if err != nil {
+				return errors.Wrap(err, "could not create session token")
 			}
 
+			req := &object.GetRangeHashRequest{
+				Address: addr,
+				Ranges:  []object.Range{{Offset: 0, Length: obj.SystemHeader.PayloadLength}},
+			}
+			req.SetToken(token)
 			setTTL(c, req)
+			setRaw(c, req)
 			signRequest(c, req)
 
 			if r, err := client.GetRangeHash(ctx, req); err != nil {
@@ -822,74 +937,59 @@ func parseUserHeaders(userH []string) (headers []object.Header) {
 	return
 }
 
-func establishSession(ctx context.Context, p sessionParams) (*session.Token, error) {
-	client, err := session.NewSessionClient(p.conn).Create(ctx)
+func establishSession(p sessionParams) error {
+	creator, err := session.NewGRPCCreator(
+		p.conn,
+		getKey(p.cmd),
+	)
+	if err != nil {
+		return err
+	}
+
+	res, err := creator.Create(p.ctx, p.prm)
+	if err != nil {
+		return err
+	}
+
+	p.res.SetID(res.GetID())
+	p.res.SetSessionKey(res.GetSessionKey())
+
+	return nil
+}
+
+func createToken(p tokenParams) (*service.Token, error) {
+	key := getKey(p.cmd)
+
+	ownerID, err := refs.NewOwnerID(&key.PublicKey)
 	if err != nil {
 		return nil, err
 	}
 
-	owner, err := refs.NewOwnerID(&p.key.PublicKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not compute owner ID")
-	}
+	token := new(service.Token)
+	token.SetOwnerID(ownerID)
+	token.SetCreationEpoch(0)
+	token.SetExpirationEpoch(math.MaxUint64)
+	token.SetVerb(p.verb)
 
-	token := &session.Token{
-		OwnerID:    owner,
-		ObjectID:   p.token.ObjectID,
-		FirstEpoch: p.token.FirstEpoch,
-		LastEpoch:  p.token.LastEpoch,
-	}
-	token.SetPublicKeys(&p.key.PublicKey)
+	// open a new session
+	if err := establishSession(sessionParams{
+		connectionParams: p.connectionParams,
 
-	req := session.NewInitRequest(token)
-	setTTL(p.cmd, req)
-	signRequest(p.cmd, req)
-
-	if err := client.Send(req); err != nil {
+		prm: token,
+		res: token,
+	}); err != nil {
 		return nil, err
 	}
 
-	resp, err := client.Recv()
-	if err != nil {
+	// sign token message
+	if err := service.AddSignatureWithKey(
+		key,
+		service.NewSignedSessionToken(token),
+	); err != nil {
 		return nil, err
 	}
 
-	// receive first response and check than nothing was changed
-	unsigned := resp.GetUnsigned()
-	if unsigned == nil {
-		return nil, errors.New("expected unsigned token")
-	}
-
-	same := unsigned.FirstEpoch == token.FirstEpoch && unsigned.LastEpoch == token.LastEpoch &&
-		unsigned.OwnerID == token.OwnerID && len(unsigned.ObjectID) == len(token.ObjectID)
-	if same {
-		for i := range unsigned.ObjectID {
-			if !unsigned.ObjectID[i].Equal(token.ObjectID[i]) {
-				same = false
-				break
-			}
-		}
-	}
-
-	if !same {
-		return nil, errors.New("received token differ")
-	} else if unsigned.Header.PublicKey == nil {
-		return nil, errors.New("received nil public key")
-	} else if err = unsigned.Sign(p.key); err != nil {
-		return nil, errors.Wrap(err, "can't sign token")
-	}
-
-	req = session.NewSignedRequest(unsigned)
-	setTTL(p.cmd, req)
-	signRequest(p.cmd, req)
-	if err = client.Send(req); err != nil {
-		return nil, err
-	} else if resp, err = client.Recv(); err != nil {
-		return nil, err
-	} else if result := resp.GetResult(); result != nil {
-		return result, nil
-	}
-	return nil, errors.New("expected result token")
+	return token, nil
 }
 
 func get(c *cli.Context) error {
@@ -905,7 +1005,6 @@ func get(c *cli.Context) error {
 		sOID  = c.String(objFlag)
 		fPath = c.String(fileFlag)
 		perm  = c.Int(permFlag)
-		raw   = c.Bool(rawFlag)
 		ctx   = gracefulContext()
 	)
 
@@ -925,14 +1024,32 @@ func get(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse Object ID %s", sOID)
 	}
 
-	req := &object.GetRequest{
-		Address: refs.Address{
-			ObjectID: oid,
-			CID:      cid,
-		},
-		Raw: raw,
+	addr := refs.Address{
+		ObjectID: oid,
+		CID:      cid,
 	}
+
+	token, err := createToken(tokenParams{
+		connectionParams: connectionParams{
+			ctx:  ctx,
+			cmd:  c,
+			conn: conn,
+		},
+
+		addr: addr,
+
+		verb: service.Token_Info_Get,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not create session token")
+	}
+
+	req := &object.GetRequest{
+		Address: addr,
+	}
+	req.SetToken(token)
 	setTTL(c, req)
+	setRaw(c, req)
 	signRequest(c, req)
 
 	getClient, err := object.NewServiceClient(conn).Get(ctx, req)
