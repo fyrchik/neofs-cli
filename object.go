@@ -173,8 +173,6 @@ func del(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	if err = objID.Parse(objArg); err != nil {
@@ -245,8 +243,6 @@ func head(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	if err = objID.Parse(objArg); err != nil {
@@ -435,8 +431,6 @@ func search(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	for i := 0; i < qArgs.Len(); i += 2 {
@@ -538,8 +532,6 @@ func getRange(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	if err = objID.Parse(objArg); err != nil {
@@ -633,8 +625,6 @@ func getRangeHash(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID '%s'", cidArg)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	if err = objID.Parse(objArg); err != nil {
@@ -765,8 +755,6 @@ func put(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	owner, err := refs.NewOwnerID(&key.PublicKey)
@@ -1016,8 +1004,6 @@ func get(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
 	} else if conn, err = connect(ctx, c); err != nil {
 		return errors.Wrapf(err, "can't connect to host '%s'", host)
-	} else if _, err := fetchContainer(ctx, conn, cid, c); err != nil {
-		return errors.Wrapf(err, "can't fetch container '%s'", cid)
 	}
 
 	if err = oid.Parse(sOID); err != nil {
