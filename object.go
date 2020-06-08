@@ -1078,8 +1078,7 @@ func get(c *cli.Context) error {
 					fmt.Println("Object corrupted")
 					return err
 				}
-				fmt.Println("Object removed")
-				return nil
+				return errors.New("Object removed")
 			}
 
 			fmt.Printf("Object origin received: %s\n", resp.GetObject().SystemHeader.ID)
