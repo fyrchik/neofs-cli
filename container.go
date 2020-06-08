@@ -187,6 +187,45 @@ func fetchContainer(ctx context.Context, con *grpc.ClientConn, cid refs.CID, cli
 	return container.NewServiceClient(con).Get(ctx, req)
 }
 
+func sfGroupStringify(g netmap.SFGroup) string {
+	w := new(strings.Builder)
+	for i := range g.Selectors {
+		_, _ = fmt.Fprintf(w, "SELECT %d %s", g.Selectors[i].Count, g.Selectors[i].Key)
+
+		if len(g.Filters) > i {
+			val := ""
+			switch v := g.Filters[i].F.Args.(type) {
+			case *netmap.SimpleFilter_Value:
+				val = v.Value
+			default:
+				val = "UNKNOWN"
+			}
+
+			_, _ = fmt.Fprintf(w, " FILTER %s %s %v",
+				g.Filters[i].Key,
+				g.Filters[i].F.Op,
+				val)
+		}
+	}
+
+	return w.String()
+}
+
+func placementStringify(p *netmap.PlacementRule) string {
+	result := new(strings.Builder)
+
+	_, _ = fmt.Fprintf(result, "RF %d ", p.ReplFactor)
+
+	items := make([]string, 0, len(p.SFGroups))
+	for i := range p.SFGroups {
+		items = append(items, sfGroupStringify(p.SFGroups[i]))
+	}
+
+	result.WriteString(strings.Join(items, "; "))
+
+	return result.String()
+}
+
 func getContainer(c *cli.Context) error {
 	var (
 		err  error
@@ -217,7 +256,7 @@ func getContainer(c *cli.Context) error {
 	fmt.Printf("Container ID: %s\n", cid)
 	fmt.Printf("Owner ID    : %s\n", resp.Container.OwnerID)
 	fmt.Printf("Capacity    : %s\n", object.ByteSize(resp.Container.Capacity))
-	fmt.Printf("Placement   : %s\n", resp.Container.Rules.String())
+	fmt.Printf("Placement   : %s\n", placementStringify(&resp.Container.Rules))
 	fmt.Printf("Salt        : %s\n", resp.Container.Salt)
 
 	return nil
