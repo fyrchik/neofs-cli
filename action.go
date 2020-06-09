@@ -15,6 +15,8 @@ const (
 	GetContainer
 	DelContainer
 	ListContainers
+	SetContainerEACL
+	GetContainerEACL
 
 	Object
 	GetObject
@@ -66,6 +68,9 @@ var actions = map[actionName]*action{
 	GetContainer:   getContainerAction,
 	DelContainer:   delContainerAction,
 	ListContainers: listContainersAction,
+
+	SetContainerEACL: setContainerEACLAction,
+	GetContainerEACL: getContainerEACLAction,
 
 	// object commands
 	Object:             objectAction,

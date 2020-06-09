@@ -26,6 +26,7 @@ const (
 	verboseFlag = "verbose"
 	beautyFlag  = "beauty"
 	stateFlag   = "state"
+	eaclFlag    = "eacl"
 
 	ConfigFlag = "config"
 
@@ -131,6 +132,11 @@ var (
 	rawQuery = &cli.BoolFlag{
 		Name:  rawFlag,
 		Usage: "send request with raw flag set",
+	}
+
+	eacl = &cli.StringFlag{
+		Name:  eaclFlag,
+		Usage: "extended ACL table in hex format",
 	}
 )
 

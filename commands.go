@@ -166,6 +166,22 @@ func commands() cli.Commands {
 					Flags:       getFlags(ListContainers),
 					Action:      getAction(ListContainers),
 				},
+				{
+					Name:        "set-eacl",
+					Usage:       "set extended ACL rules",
+					UsageText:   "set-eacl --cid <cid> --eacl <hex>",
+					Description: "change extended ACL rules of user container",
+					Flags:       getFlags(SetContainerEACL),
+					Action:      getAction(SetContainerEACL),
+				},
+				{
+					Name:        "get-eacl",
+					Usage:       "get extended ACL rules",
+					UsageText:   "get-eacl --cid <cid>",
+					Description: "receive extended ACL rules of user container",
+					Flags:       getFlags(GetContainerEACL),
+					Action:      getAction(GetContainerEACL),
+				},
 			},
 		},
 		{
