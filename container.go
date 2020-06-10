@@ -258,6 +258,7 @@ func getContainer(c *cli.Context) error {
 	fmt.Printf("Capacity    : %s\n", object.ByteSize(resp.Container.Capacity))
 	fmt.Printf("Placement   : %s\n", placementStringify(&resp.Container.Rules))
 	fmt.Printf("Salt        : %s\n", resp.Container.Salt)
+	fmt.Printf("BasicACL    : %08x\n", resp.Container.BasicACL)
 
 	return nil
 }
