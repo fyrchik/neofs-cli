@@ -140,9 +140,9 @@ var (
 	}
 )
 
-func signRequest(c *cli.Context, req service.DataWithTokenSignAccumulator) {
+func signRequest(c *cli.Context, req service.RequestSignedData) {
 	key := getKey(c)
-	if err := service.SignDataWithSessionToken(key, req); err != nil {
+	if err := service.SignRequestData(key, req); err != nil {
 		fmt.Printf("%T could not sign request\n", req)
 		fmt.Println(err.Error())
 		os.Exit(2)
