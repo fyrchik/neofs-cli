@@ -361,7 +361,7 @@ func setContainerEACL(c *cli.Context) error {
 		ctx   = gracefulContext()
 	)
 
-	if sCID == "" || sEACL == "" {
+	if sCID == "" {
 		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
 	}
 
@@ -369,8 +369,13 @@ func setContainerEACL(c *cli.Context) error {
 		return errors.Wrapf(err, "can't parse CID %s", sCID)
 	}
 
-	if eacl, err = hex.DecodeString(sEACL); err != nil {
-		return errors.Wrap(err, "could not decode extended ACL")
+	switch sEACL {
+	case "empty":
+		eacl = make([]byte, 0)
+	default:
+		if eacl, err = hex.DecodeString(sEACL); err != nil {
+			return errors.Wrap(err, "could not decode extended ACL")
+		}
 	}
 
 	if sig, err = crypto.SignRFC6979(key, eacl); err != nil {
