@@ -88,6 +88,7 @@ var (
 				Name:  copiesNumFlag,
 				Usage: "set number of copies to store",
 			},
+			bearer,
 		},
 	}
 	getObjectAction = &action{
@@ -97,6 +98,7 @@ var (
 			objectID,
 			filePath,
 			permissions,
+			bearer,
 		},
 	}
 	delObjectAction = &action{
@@ -104,6 +106,7 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			objectID,
+			bearer,
 		},
 	}
 	headObjectAction = &action{
@@ -112,6 +115,7 @@ var (
 			containerID,
 			objectID,
 			fullHeaders,
+			bearer,
 		},
 	}
 	searchObjectAction = &action{
@@ -123,6 +127,7 @@ var (
 				Name:  rootFlag,
 				Usage: "search only user's objects",
 			},
+			bearer,
 		},
 	}
 	getRangeObjectAction = &action{
@@ -130,6 +135,7 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			objectID,
+			bearer,
 		},
 	}
 	getRangeHashObjectAction = &action{
@@ -147,9 +153,38 @@ var (
 			},
 			filePath,
 			permissions,
+			bearer,
 		},
 	}
 )
+
+func addBearerToken(c *cli.Context, req *service.RequestVerificationHeader) error {
+	sBearer := c.String(bearerFlag)
+	if sBearer == "" {
+		return nil
+	}
+
+	key := getKey(c)
+
+	owner, err := refs.NewOwnerID(&key.PublicKey)
+	if err != nil {
+		return errors.Wrap(err, "could not compute owner ID")
+	}
+
+	bearerRules, err := hex.DecodeString(sBearer)
+	if err != nil {
+		return errors.Wrap(err, "could not decode bearer ACL rules")
+	}
+
+	bearer := new(service.BearerTokenMsg)
+	bearer.SetExpirationEpoch(math.MaxUint64)
+	bearer.SetACLRules(bearerRules)
+	bearer.SetOwnerID(owner)
+
+	req.SetBearer(bearer)
+
+	return service.AddSignatureWithKey(key, service.NewSignedBearerToken(bearer))
+}
 
 func del(c *cli.Context) error {
 	var (
@@ -208,6 +243,11 @@ func del(c *cli.Context) error {
 		Address: addr,
 		OwnerID: owner,
 	}
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
 	req.SetToken(token)
 	setTTL(c, req)
 	setRaw(c, req)
@@ -274,6 +314,11 @@ func head(c *cli.Context) error {
 		FullHeaders: fh,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -481,6 +526,11 @@ func search(c *cli.Context) error {
 		QueryVersion: 1,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -572,6 +622,11 @@ func getRange(c *cli.Context) error {
 		Range:   ranges[0],
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -666,6 +721,11 @@ func getRangeHash(c *cli.Context) error {
 		Salt:    salt,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -831,6 +891,11 @@ func put(c *cli.Context) error {
 			},
 		}
 		req.SetToken(token)
+
+		if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+			return errors.Wrap(err, "could not attach Bearer token")
+		}
+
 		setTTL(c, req)
 		setRaw(c, req)
 		signRequest(c, req)
@@ -1034,6 +1099,11 @@ func get(c *cli.Context) error {
 		Address: addr,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)

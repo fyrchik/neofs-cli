@@ -35,7 +35,7 @@ func commands() cli.Commands {
 					Name:  "put",
 					Usage: "put object into container",
 					UsageText: "put --cid <cid> --file </path/to/file> " +
-						"[--perm <permissions>] [--verify] [--copies <number>] [--user key1=value1 ...]",
+						"[--perm <permissions>] [--verify] [--copies <number>] [--user key1=value1 ...] [--bearer <hex>]",
 					Description: "put user data into container",
 					Flags:       getFlags(PutObject),
 					Action:      getAction(PutObject),
@@ -43,7 +43,7 @@ func commands() cli.Commands {
 				{
 					Name:        "get",
 					Usage:       "get object from container",
-					UsageText:   "get --cid <cid> --oid <oid> --file ./my-file [--perm <permissions>]",
+					UsageText:   "get --cid <cid> --oid <oid> --file ./my-file [--perm <permissions>] [--bearer <hex>]",
 					Description: "get file from network",
 					Flags:       getFlags(GetObject),
 					Action:      getAction(GetObject),
@@ -51,7 +51,7 @@ func commands() cli.Commands {
 				{
 					Name:        "delete",
 					Usage:       "delete object from container",
-					UsageText:   "delete --cid <cid> --oid <oid>",
+					UsageText:   "delete --cid <cid> --oid <oid> [--bearer <hex>]",
 					Description: "delete file from network",
 					Flags:       getFlags(DelObject),
 					Action:      getAction(DelObject),
@@ -59,7 +59,7 @@ func commands() cli.Commands {
 				{
 					Name:        "head",
 					Usage:       "get object header from container",
-					UsageText:   "head --cid <cid> --oid <oid> [--full-headers]",
+					UsageText:   "head --cid <cid> --oid <oid> [--full-headers] [--bearer <hex>]",
 					Description: "retrieve object metadata",
 					Flags:       getFlags(HeadObject),
 					Action:      getAction(HeadObject),
@@ -67,7 +67,7 @@ func commands() cli.Commands {
 				{
 					Name:        "search",
 					Usage:       "perform search query within container",
-					UsageText:   "search --cid <cid> [<key1> <query1> [<key2> <query2>...]]",
+					UsageText:   "search --cid <cid> [--bearer <hex>] [<key1> <query1> [<key2> <query2>...]]",
 					Description: "search object by headers",
 					Flags:       getFlags(SearchObject),
 					Action:      getAction(SearchObject),
@@ -75,14 +75,14 @@ func commands() cli.Commands {
 				{
 					Name:      "get-range",
 					Usage:     "get data of the object payload ranges from container",
-					UsageText: "get-range --cid <cid> --oid <oid> <offset>:<length>",
+					UsageText: "get-range --cid <cid> --oid <oid> [--bearer <hex>] <offset>:<length>",
 					Flags:     getFlags(GetRangeObject),
 					Action:    getAction(GetRangeObject),
 				},
 				{
 					Name:      "get-range-hash",
 					Usage:     "get homomorphic hash of the object payload ranges from container",
-					UsageText: "get-range-hash --cid <cid> --oid <oid> [--verify --file </path/to/file>] [--salt <hex>] [<offset1>:<length1> [...]]",
+					UsageText: "get-range-hash --cid <cid> --oid <oid> [--bearer <hex>] [--verify --file </path/to/file>] [--salt <hex>] [<offset1>:<length1> [...]]",
 					Flags:     getFlags(GetRangeHashObject),
 					Action:    getAction(GetRangeHashObject),
 				},

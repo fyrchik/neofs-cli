@@ -27,6 +27,7 @@ const (
 	beautyFlag  = "beauty"
 	stateFlag   = "state"
 	eaclFlag    = "eacl"
+	bearerFlag  = "bearer"
 
 	ConfigFlag = "config"
 
@@ -137,6 +138,11 @@ var (
 	eacl = &cli.StringFlag{
 		Name:  eaclFlag,
 		Usage: "extended ACL table in hex format",
+	}
+
+	bearer = &cli.StringFlag{
+		Name:  bearerFlag,
+		Usage: "ACL rules for Bearer token in hex format",
 	}
 )
 
