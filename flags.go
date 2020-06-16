@@ -28,6 +28,7 @@ const (
 	stateFlag   = "state"
 	eaclFlag    = "eacl"
 	bearerFlag  = "bearer"
+	extHdrFlag  = "xhdr"
 
 	ConfigFlag = "config"
 
@@ -143,6 +144,11 @@ var (
 	bearer = &cli.StringFlag{
 		Name:  bearerFlag,
 		Usage: "ACL rules for Bearer token in hex format",
+	}
+
+	extHeader = &cli.StringSliceFlag{
+		Name:  extHdrFlag,
+		Usage: "provide optional request headers",
 	}
 )
 

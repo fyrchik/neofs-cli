@@ -248,6 +248,7 @@ func del(c *cli.Context) error {
 		return errors.Wrap(err, "could not attach Bearer token")
 	}
 
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	req.SetToken(token)
 	setTTL(c, req)
 	setRaw(c, req)
@@ -319,6 +320,7 @@ func head(c *cli.Context) error {
 		return errors.Wrap(err, "could not attach Bearer token")
 	}
 
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -531,6 +533,7 @@ func search(c *cli.Context) error {
 		return errors.Wrap(err, "could not attach Bearer token")
 	}
 
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -627,6 +630,7 @@ func getRange(c *cli.Context) error {
 		return errors.Wrap(err, "could not attach Bearer token")
 	}
 
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -726,6 +730,7 @@ func getRangeHash(c *cli.Context) error {
 		return errors.Wrap(err, "could not attach Bearer token")
 	}
 
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -896,6 +901,7 @@ func put(c *cli.Context) error {
 			return errors.Wrap(err, "could not attach Bearer token")
 		}
 
+		req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 		setTTL(c, req)
 		setRaw(c, req)
 		signRequest(c, req)
@@ -988,6 +994,26 @@ func parseUserHeaders(userH []string) (headers []object.Header) {
 		headers[i].Value = &object.Header_UserHeader{UserHeader: uh}
 	}
 	return
+}
+
+func parseRequestHeaders(reqH []string) []service.RequestExtendedHeader_KV {
+	headers := make([]service.RequestExtendedHeader_KV, 0, len(reqH))
+
+	for i := range reqH {
+		kv := strings.SplitN(reqH[i], "=", 2)
+
+		h := service.RequestExtendedHeader_KV{}
+
+		h.SetK(kv[0])
+
+		if len(kv) > 1 {
+			h.SetV(kv[1])
+		}
+
+		headers = append(headers, h)
+	}
+
+	return headers
 }
 
 func establishSession(p sessionParams) error {
@@ -1104,6 +1130,7 @@ func get(c *cli.Context) error {
 		return errors.Wrap(err, "could not attach Bearer token")
 	}
 
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
