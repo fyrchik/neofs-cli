@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,8 @@ const (
 	ruleFlag = "rule"
 	capFlag  = "cap"
 	aclFlag  = "acl"
+
+	timeoutFlag = "timeout"
 
 	defaultCapacity = 1
 
@@ -48,6 +51,11 @@ var (
 				Name:  aclFlag,
 				Usage: "basic ACL: public, private, readonly or 32-bit hex",
 				Value: "private",
+			},
+			&cli.DurationFlag{
+				Name:  timeoutFlag,
+				Usage: "create container timeout",
+				Value: time.Minute * 2,
 			},
 		},
 	}
@@ -81,6 +89,8 @@ func putContainer(c *cli.Context) error {
 		sRule    = c.String(ruleFlag)
 		sACL     = strings.TrimLeft(c.String(aclFlag), "0x")
 		plRule   *netmap.PlacementRule
+
+		createTimeout = c.Duration(timeoutFlag)
 	)
 
 	if sRule == "" || cCap == 0 {
@@ -145,6 +155,9 @@ func putContainer(c *cli.Context) error {
 	cid := resp.CID
 	client := container.NewServiceClient(conn)
 
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
+
 loop:
 	for {
 		select {
@@ -152,7 +165,7 @@ loop:
 			fmt.Println()
 			fmt.Println("Timeout exceeded! Something went wrong.")
 			fmt.Println("Try to find your container by command `container list` or retry in few minutes.")
-			break loop
+			os.Exit(2)
 		case <-ticker.C:
 			fmt.Printf("...")
 
