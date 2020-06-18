@@ -387,13 +387,13 @@ func setContainerEACL(c *cli.Context) error {
 	}
 
 	req := new(container.SetExtendedACLRequest)
-	req.SetCID(cid)
+	req.SetID(cid)
 	req.SetEACL(eacl)
 	req.SetSignature(sig)
 
 	setTTL(c, req)
 	setRaw(c, req)
-	// TODO: signRequest(c, req)
+	signRequest(c, req)
 
 	fmt.Println("Updating ACL rules of container...")
 
@@ -431,11 +431,11 @@ func getContainerEACL(c *cli.Context) error {
 	}
 
 	req := new(container.GetExtendedACLRequest)
-	req.SetCID(cid)
+	req.SetID(cid)
 
 	setTTL(c, req)
 	setRaw(c, req)
-	// TODO: signRequest(c, req)
+	signRequest(c, req)
 
 	fmt.Println("Waiting for ACL rules of container...")
 

@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/mr-tron/base58 v1.2.0
-	github.com/nspcc-dev/neofs-api-go v1.0.1-0.20200615181008-cd6f628b5b56
+	github.com/nspcc-dev/neofs-api-go v1.1.0
 	github.com/nspcc-dev/neofs-crypto v0.3.0
 	github.com/nspcc-dev/netmap v1.7.0
 	github.com/nspcc-dev/netmap-ql v1.2.0
