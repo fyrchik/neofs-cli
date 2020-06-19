@@ -88,6 +88,7 @@ var (
 				Name:  copiesNumFlag,
 				Usage: "set number of copies to store",
 			},
+			bearer,
 		},
 	}
 	getObjectAction = &action{
@@ -97,6 +98,7 @@ var (
 			objectID,
 			filePath,
 			permissions,
+			bearer,
 		},
 	}
 	delObjectAction = &action{
@@ -104,6 +106,7 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			objectID,
+			bearer,
 		},
 	}
 	headObjectAction = &action{
@@ -112,6 +115,7 @@ var (
 			containerID,
 			objectID,
 			fullHeaders,
+			bearer,
 		},
 	}
 	searchObjectAction = &action{
@@ -123,6 +127,7 @@ var (
 				Name:  rootFlag,
 				Usage: "search only user's objects",
 			},
+			bearer,
 		},
 	}
 	getRangeObjectAction = &action{
@@ -130,6 +135,7 @@ var (
 		Flags: []cli.Flag{
 			containerID,
 			objectID,
+			bearer,
 		},
 	}
 	getRangeHashObjectAction = &action{
@@ -147,9 +153,38 @@ var (
 			},
 			filePath,
 			permissions,
+			bearer,
 		},
 	}
 )
+
+func addBearerToken(c *cli.Context, req *service.RequestVerificationHeader) error {
+	sBearer := c.String(bearerFlag)
+	if sBearer == "" {
+		return nil
+	}
+
+	key := getKey(c)
+
+	owner, err := refs.NewOwnerID(&key.PublicKey)
+	if err != nil {
+		return errors.Wrap(err, "could not compute owner ID")
+	}
+
+	bearerRules, err := hex.DecodeString(sBearer)
+	if err != nil {
+		return errors.Wrap(err, "could not decode bearer ACL rules")
+	}
+
+	bearer := new(service.BearerTokenMsg)
+	bearer.SetExpirationEpoch(math.MaxUint64)
+	bearer.SetACLRules(bearerRules)
+	bearer.SetOwnerID(owner)
+
+	req.SetBearer(bearer)
+
+	return service.AddSignatureWithKey(key, service.NewSignedBearerToken(bearer))
+}
 
 func del(c *cli.Context) error {
 	var (
@@ -208,6 +243,12 @@ func del(c *cli.Context) error {
 		Address: addr,
 		OwnerID: owner,
 	}
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	req.SetToken(token)
 	setTTL(c, req)
 	setRaw(c, req)
@@ -274,6 +315,12 @@ func head(c *cli.Context) error {
 		FullHeaders: fh,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -481,6 +528,12 @@ func search(c *cli.Context) error {
 		QueryVersion: 1,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -572,6 +625,12 @@ func getRange(c *cli.Context) error {
 		Range:   ranges[0],
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -666,6 +725,12 @@ func getRangeHash(c *cli.Context) error {
 		Salt:    salt,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)
@@ -831,6 +896,12 @@ func put(c *cli.Context) error {
 			},
 		}
 		req.SetToken(token)
+
+		if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+			return errors.Wrap(err, "could not attach Bearer token")
+		}
+
+		req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 		setTTL(c, req)
 		setRaw(c, req)
 		signRequest(c, req)
@@ -923,6 +994,26 @@ func parseUserHeaders(userH []string) (headers []object.Header) {
 		headers[i].Value = &object.Header_UserHeader{UserHeader: uh}
 	}
 	return
+}
+
+func parseRequestHeaders(reqH []string) []service.RequestExtendedHeader_KV {
+	headers := make([]service.RequestExtendedHeader_KV, 0, len(reqH))
+
+	for i := range reqH {
+		kv := strings.SplitN(reqH[i], "=", 2)
+
+		h := service.RequestExtendedHeader_KV{}
+
+		h.SetK(kv[0])
+
+		if len(kv) > 1 {
+			h.SetV(kv[1])
+		}
+
+		headers = append(headers, h)
+	}
+
+	return headers
 }
 
 func establishSession(p sessionParams) error {
@@ -1034,6 +1125,12 @@ func get(c *cli.Context) error {
 		Address: addr,
 	}
 	req.SetToken(token)
+
+	if err := addBearerToken(c, &req.RequestVerificationHeader); err != nil {
+		return errors.Wrap(err, "could not attach Bearer token")
+	}
+
+	req.SetHeaders(parseRequestHeaders(c.StringSlice(extHdrFlag)))
 	setTTL(c, req)
 	setRaw(c, req)
 	signRequest(c, req)

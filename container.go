@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"github.com/nspcc-dev/neofs-api-go/container"
 	"github.com/nspcc-dev/neofs-api-go/object"
 	"github.com/nspcc-dev/neofs-api-go/refs"
+	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/netmap"
 	query "github.com/nspcc-dev/netmap-ql"
 	"github.com/pkg/errors"
@@ -73,6 +75,21 @@ var (
 	}
 	listContainersAction = &action{
 		Action: listContainers,
+	}
+
+	setContainerEACLAction = &action{
+		Flags: []cli.Flag{
+			containerID,
+			eacl,
+		},
+		Action: setContainerEACL,
+	}
+
+	getContainerEACLAction = &action{
+		Flags: []cli.Flag{
+			containerID,
+		},
+		Action: getContainerEACL,
 	}
 )
 
@@ -340,6 +357,112 @@ func listContainers(c *cli.Context) error {
 	for i := range resp.CID {
 		fmt.Println(resp.CID[i])
 	}
+
+	return nil
+}
+
+func setContainerEACL(c *cli.Context) error {
+	var (
+		err   error
+		cid   refs.CID
+		eacl  []byte
+		sig   []byte
+		key   = getKey(c)
+		host  = getHost(c)
+		conn  *grpc.ClientConn
+		sCID  = c.String(cidFlag)
+		sEACL = c.String(eaclFlag)
+		ctx   = gracefulContext()
+	)
+
+	if sCID == "" {
+		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
+	}
+
+	if cid, err = refs.CIDFromString(sCID); err != nil {
+		return errors.Wrapf(err, "can't parse CID %s", sCID)
+	}
+
+	switch sEACL {
+	case "empty":
+		eacl = make([]byte, 0)
+	default:
+		if eacl, err = hex.DecodeString(sEACL); err != nil {
+			return errors.Wrap(err, "could not decode extended ACL")
+		}
+	}
+
+	if sig, err = crypto.SignRFC6979(key, eacl); err != nil {
+		return errors.Wrap(err, "could not sign extended ACL")
+	}
+
+	if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "can't connect to host '%s'", host)
+	}
+
+	req := new(container.SetExtendedACLRequest)
+	req.SetID(cid)
+	req.SetEACL(eacl)
+	req.SetSignature(sig)
+
+	setTTL(c, req)
+	setRaw(c, req)
+	signRequest(c, req)
+
+	fmt.Println("Updating ACL rules of container...")
+
+	_, err = container.NewServiceClient(conn).SetExtendedACL(ctx, req)
+	if err != nil {
+		return errors.Wrapf(err, "can't complete request")
+	}
+
+	fmt.Println("Extended ACL rules was successfully updated.")
+
+	return nil
+}
+
+func getContainerEACL(c *cli.Context) error {
+	var (
+		err  error
+		cid  refs.CID
+		key  = getKey(c)
+		host = getHost(c)
+		conn *grpc.ClientConn
+		sCID = c.String(cidFlag)
+		ctx  = gracefulContext()
+	)
+
+	if sCID == "" {
+		return errors.Errorf("invalid input\nUsage: %s", c.Command.UsageText)
+	}
+
+	if cid, err = refs.CIDFromString(sCID); err != nil {
+		return errors.Wrapf(err, "can't parse CID %s", sCID)
+	}
+
+	if conn, err = connect(ctx, c); err != nil {
+		return errors.Wrapf(err, "can't connect to host '%s'", host)
+	}
+
+	req := new(container.GetExtendedACLRequest)
+	req.SetID(cid)
+
+	setTTL(c, req)
+	setRaw(c, req)
+	signRequest(c, req)
+
+	fmt.Println("Waiting for ACL rules of container...")
+
+	resp, err := container.NewServiceClient(conn).GetExtendedACL(ctx, req)
+	if err != nil {
+		return errors.Wrapf(err, "can't complete request")
+	}
+
+	if err := crypto.VerifyRFC6979(&key.PublicKey, resp.GetEACL(), resp.GetSignature()); err != nil {
+		return errors.Wrap(err, "could not verify signature")
+	}
+
+	fmt.Printf("Extended container ACL table: %s\n", hex.EncodeToString(resp.GetEACL()))
 
 	return nil
 }

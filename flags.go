@@ -26,6 +26,9 @@ const (
 	verboseFlag = "verbose"
 	beautyFlag  = "beauty"
 	stateFlag   = "state"
+	eaclFlag    = "eacl"
+	bearerFlag  = "bearer"
+	extHdrFlag  = "xhdr"
 
 	ConfigFlag = "config"
 
@@ -132,11 +135,26 @@ var (
 		Name:  rawFlag,
 		Usage: "send request with raw flag set",
 	}
+
+	eacl = &cli.StringFlag{
+		Name:  eaclFlag,
+		Usage: "extended ACL table in hex format",
+	}
+
+	bearer = &cli.StringFlag{
+		Name:  bearerFlag,
+		Usage: "ACL rules for Bearer token in hex format",
+	}
+
+	extHeader = &cli.StringSliceFlag{
+		Name:  extHdrFlag,
+		Usage: "provide optional request headers",
+	}
 )
 
-func signRequest(c *cli.Context, req service.DataWithTokenSignAccumulator) {
+func signRequest(c *cli.Context, req service.RequestSignedData) {
 	key := getKey(c)
-	if err := service.SignDataWithSessionToken(key, req); err != nil {
+	if err := service.SignRequestData(key, req); err != nil {
 		fmt.Printf("%T could not sign request\n", req)
 		fmt.Println(err.Error())
 		os.Exit(2)

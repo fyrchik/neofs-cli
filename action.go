@@ -15,6 +15,8 @@ const (
 	GetContainer
 	DelContainer
 	ListContainers
+	SetContainerEACL
+	GetContainerEACL
 
 	Object
 	GetObject
@@ -57,7 +59,7 @@ type action struct {
 
 var actions = map[actionName]*action{
 	Global: {
-		Flags: []cli.Flag{ttlF, rawQuery, cfgF, keyFile, hostAddr, verbose},
+		Flags: []cli.Flag{ttlF, rawQuery, cfgF, keyFile, hostAddr, verbose, extHeader},
 	},
 
 	// container commands
@@ -66,6 +68,9 @@ var actions = map[actionName]*action{
 	GetContainer:   getContainerAction,
 	DelContainer:   delContainerAction,
 	ListContainers: listContainersAction,
+
+	SetContainerEACL: setContainerEACLAction,
+	GetContainerEACL: getContainerEACLAction,
 
 	// object commands
 	Object:             objectAction,
