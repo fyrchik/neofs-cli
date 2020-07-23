@@ -17,7 +17,7 @@ func TestStringify(t *testing.T) {
 	SystemHeader:
 		- ID=7e0b9c6c-aabc-4985-949e-2680e577b48b
 		- CID=11111111111111111111111111111111
-		- OwnerID=ALYeYC41emF6MrmUMc4a8obEPdgFhq9ran
+		- OwnerID=NQHKh7fKGieCPrPuiEkY58ucRFwWMyU1Mc
 		- Version=1
 		- PayloadLength=1
 		- CreatedAt={UnixTime=1 Epoch=1}
